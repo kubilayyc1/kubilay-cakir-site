@@ -32,7 +32,7 @@
       <ol class="pay-steps">
         <li>Yukarıdaki IBAN’a havale / EFT yapın.</li>
         <li>Tutarı ve isteğe bağlı notu girin.</li>
-        <li><strong>Ödeme Bildirimi Gönder</strong> ile yöneticiye haber verin.</li>
+        <li><strong>Ödeme Bildirimi Gönder</strong> ile kayıt oluşturun; Kadir’e WhatsApp mesajı açılır.</li>
       </ol>
     </div>
 
@@ -95,7 +95,10 @@ document.getElementById("pay-form").addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (data.ok && data.redirect) {
-      window.KCToast && KCToast("Bildirim alındı — yönlendiriliyorsunuz");
+      window.KCToast && KCToast("Bildirim alındı — Kadir'e WhatsApp açılıyor");
+      if (data.whatsapp_url) {
+        window.open(data.whatsapp_url, "_blank", "noopener,noreferrer");
+      }
       window.location.href = data.redirect;
       return;
     }

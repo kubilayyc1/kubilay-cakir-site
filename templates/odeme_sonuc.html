@@ -40,6 +40,12 @@
         </span>
       </div>
     </div>
+    {% if result.whatsapp_url and result.status == 'pending' %}
+    <a class="btn btn-wa btn-block" href="{{ result.whatsapp_url }}" target="_blank" rel="noopener noreferrer" style="margin-top:1rem;">
+      WhatsApp’ta Kadir’e Bildir
+    </a>
+    <p class="sub" style="margin-top:0.6rem;">Kadir Karadeniz · {{ site.whatsapp.display }}</p>
+    {% endif %}
     <div class="result-actions">
       <a class="btn btn-gold" href="{{ url_for('payment_page') }}">Yeni Bildirim</a>
       <a class="btn btn-outline" href="{{ url_for('index') }}">Ana Sayfa</a>

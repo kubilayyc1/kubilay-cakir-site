@@ -8,7 +8,7 @@ import os
 import sqlite3
 import uuid
 from functools import wraps
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from flask import (
     Flask,
@@ -34,6 +34,8 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Kubilay8181")
 DEFAULT_IBAN = "TR83 0015 7000 0000 0205 4704 26"
 DEFAULT_BANK = "Enpara"
 DEFAULT_RECIPIENT = "Kubilay Mert Çakır"
+DEFAULT_WHATSAPP = "905331211580"  # Kadir Karadeniz
+DEFAULT_WHATSAPP_LABEL = "Kadir Karadeniz"
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("kubilay")
@@ -192,6 +194,38 @@ def set_setting(key: str, value: str) -> None:
     db.commit()
 
 
+
+def whatsapp_ctx(settings: dict | None = None) -> dict:
+    s = settings or get_all_settings()
+    raw = (s.get("whatsapp_phone") or DEFAULT_WHATSAPP).strip()
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    if digits.startswith("0") and len(digits) == 11:
+        digits = "90" + digits[1:]
+    if not digits.startswith("90") and len(digits) == 10:
+        digits = "90" + digits
+    label = (s.get("whatsapp_label") or DEFAULT_WHATSAPP_LABEL).strip()
+    display = "+90 (533) 121 15 80" if digits.endswith("5331211580") else f"+{digits}"
+    return {
+        "phone": digits,
+        "label": label,
+        "url": f"https://wa.me/{digits}",
+        "display": display,
+    }
+
+
+def whatsapp_payment_url(user: dict, amount: float, note: str, payment_id: int) -> str:
+    wa = whatsapp_ctx()
+    note_part = f"\nNot: {note}" if note else ""
+    text = (
+        f"Merhaba Kadir, siteden yeni ödeme bildirimi.\n"
+        f"Kayıt: #{payment_id}\n"
+        f"Kişi: {user.get('name')} ({user.get('email')})\n"
+        f"Tutar: ₺{amount:.2f}{note_part}\n"
+        f"Lütfen admin panelinden kontrol eder misin?"
+    )
+    return f"{wa['url']}?text={quote(text)}"
+
+
 def bank_ctx(settings: dict | None = None) -> dict:
     s = settings or get_all_settings()
     iban = (s.get("bank_iban") or DEFAULT_IBAN).strip()
@@ -216,6 +250,7 @@ def site_ctx() -> dict:
         "maintenance_mode": s.get("maintenance_mode", "0") == "1",
         "payment_ready": True,
         "bank": bank,
+        "whatsapp": whatsapp_ctx(s),
     }
 
 
@@ -233,6 +268,12 @@ def inject_site():
                 "registration_open": True,
                 "maintenance_mode": False,
                 "payment_ready": True,
+                "whatsapp": {
+                    "phone": DEFAULT_WHATSAPP,
+                    "label": DEFAULT_WHATSAPP_LABEL,
+                    "url": f"https://wa.me/{DEFAULT_WHATSAPP}",
+                    "display": "+90 (533) 121 15 80",
+                },
                 "bank": {
                     "iban": DEFAULT_IBAN,
                     "iban_plain": DEFAULT_IBAN.replace(" ", ""),
@@ -451,6 +492,12 @@ def payment_result(payment_id):
         "note": row["note"],
         "error_message": None,
     }
+    result["whatsapp_url"] = whatsapp_payment_url(
+        {"name": user.get("name"), "email": row["user_email"]},
+        float(row["amount"] or 0),
+        row["note"] or "",
+        row["id"],
+    )
     return render_template("odeme_sonuc.html", user=user, result=result)
 
 
@@ -691,12 +738,14 @@ def api_payment_notify(user):
         user["id"],
         amount_f,
     )
+    wa_url = whatsapp_payment_url(user, amount_f, note, payment_id)
     return jsonify(
         {
             "ok": True,
             "payment_id": payment_id,
             "status": "pending",
             "conversation_id": conversation_id,
+            "whatsapp_url": wa_url,
             "redirect": url_for("payment_result", payment_id=payment_id),
         }
     )
