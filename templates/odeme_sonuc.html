@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Ödeme Sonucu — {{ site.site_title }}{% endblock %}
+{% block title %}{{ t('result_title') }} — {{ site.site_title }}{% endblock %}
 {% block content %}
 <section class="section fade-in">
-  <h2 class="section-title">Ödeme Sonucu</h2>
+  <h2 class="section-title">{{ t('result_title') }}</h2>
   <div class="card glass pay-panel result-card">
     {% if result.status == 'approved' or result.ok %}
       <div class="result-icon ok" aria-hidden="true">✓</div>
-      <h2>Onaylandı</h2>
+      <h2>{{ t('result_approved') }}</h2>
     {% elif result.status == 'pending' %}
       <div class="result-icon pending" aria-hidden="true">⏳</div>
-      <h2>Bildirim Alındı</h2>
+      <h2>{{ t('result_pending') }}</h2>
     {% else %}
       <div class="result-icon fail" aria-hidden="true">!</div>
-      <h2>Reddedildi</h2>
+      <h2>{{ t('result_rejected') }}</h2>
     {% endif %}
     <p class="sub">{{ result.message }}</p>
     {% if result.error_message %}
@@ -20,36 +20,98 @@
     {% endif %}
     <div class="bank-box" style="margin-top:1.25rem;">
       {% if result.amount %}
-      <div class="bank-row"><span class="k">Tutar</span><span class="v">₺{{ '%.2f'|format(result.amount) }}</span></div>
+      <div class="bank-row"><span class="k">{{ t('result_amount') }}</span><span class="v">₺{{ '%.2f'|format(result.amount) }}</span></div>
       {% endif %}
       {% if result.note %}
-      <div class="bank-row"><span class="k">Not</span><span class="v">{{ result.note }}</span></div>
+      <div class="bank-row"><span class="k">{{ t('result_note') }}</span><span class="v">{{ result.note }}</span></div>
       {% endif %}
       {% if result.payment_id %}
-      <div class="bank-row"><span class="k">Kayıt No</span><span class="v">#{{ result.payment_id }}</span></div>
+      <div class="bank-row"><span class="k">{{ t('result_id') }}</span><span class="v">#{{ result.payment_id }}</span></div>
       {% endif %}
       {% if result.conversation_id %}
-      <div class="bank-row"><span class="k">Referans</span><span class="v mono">{{ result.conversation_id }}</span></div>
+      <div class="bank-row"><span class="k">{{ t('result_ref') }}</span><span class="v mono">{{ result.conversation_id }}</span></div>
       {% endif %}
       <div class="bank-row">
-        <span class="k">Durum</span>
+        <span class="k">{{ t('result_status') }}</span>
         <span class="v">
-          {% if result.status == 'approved' %}<span class="badge badge-ok">onaylandı</span>
-          {% elif result.status == 'rejected' %}<span class="badge badge-bad">reddedildi</span>
-          {% else %}<span class="badge badge-pending">beklemede</span>{% endif %}
+          {% if result.status == 'approved' %}<span class="badge badge-ok">{{ t('badge_approved') }}</span>
+          {% elif result.status == 'rejected' %}<span class="badge badge-bad">{{ t('badge_rejected') }}</span>
+          {% else %}<span class="badge badge-pending">{{ t('badge_pending') }}</span>{% endif %}
         </span>
       </div>
     </div>
+
+    {% if result.status in ('approved', 'pending') %}
+    <div class="share-card-wrap">
+      <h3 class="share-card-title">{{ t('share_title') }}</h3>
+      <div class="share-preview" id="share-preview">
+        <div class="share-preview-inner">
+          <div class="share-brand">{{ site.site_title }}</div>
+          <div class="share-amount">₺{{ '%.2f'|format(result.amount or 0) }}</div>
+          <div class="share-status">{{ result.card_status_label }}</div>
+          <div class="share-credit">{{ t('card_credit') }}</div>
+          <div class="share-url">kubilay-cakir.onrender.com</div>
+        </div>
+      </div>
+      <div class="share-actions">
+        <a class="btn btn-gold" id="btn-download-png" href="{{ result.card_png_url }}" download="odeme-kart-{{ result.payment_id }}.png">{{ t('share_download') }}</a>
+        <button type="button" class="btn btn-outline" id="btn-copy-link">{{ t('share_copy') }}</button>
+        <button type="button" class="btn btn-outline" id="btn-web-share" hidden>{{ t('share_web') }}</button>
+      </div>
+    </div>
+    {% endif %}
+
     {% if result.whatsapp_url and result.status == 'pending' %}
     <a class="btn btn-wa btn-block" href="{{ result.whatsapp_url }}" target="_blank" rel="noopener noreferrer" style="margin-top:1rem;">
-      WhatsApp’ta Kadir’e Bildir
+      {{ t('result_wa') }}
     </a>
     <p class="sub" style="margin-top:0.6rem;">Kadir Karadeniz · {{ site.whatsapp.display }}</p>
     {% endif %}
     <div class="result-actions">
-      <a class="btn btn-gold" href="{{ url_for('payment_page') }}">Yeni Bildirim</a>
-      <a class="btn btn-outline" href="{{ url_for('index') }}">Ana Sayfa</a>
+      <a class="btn btn-gold" href="{{ url_for('payment_page') }}">{{ t('result_new') }}</a>
+      <a class="btn btn-outline" href="{{ url_for('index') }}">{{ t('result_home') }}</a>
     </div>
   </div>
 </section>
+{% endblock %}
+{% block scripts %}
+{% if result.status in ('approved', 'pending') %}
+<script>
+(function () {
+  const pngUrl = {{ result.card_png_url|tojson }};
+  const pageUrl = window.location.href;
+  const copiedMsg = {{ t('share_copied')|tojson }};
+  const shareBtn = document.getElementById("btn-web-share");
+  const copyBtn = document.getElementById("btn-copy-link");
+
+  if (navigator.share) {
+    shareBtn.hidden = false;
+    shareBtn.addEventListener("click", async () => {
+      try {
+        await navigator.share({
+          title: {{ site.site_title|tojson }},
+          text: {{ result.card_status_label|tojson }},
+          url: pageUrl,
+        });
+      } catch (_) {}
+    });
+  }
+
+  copyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      window.KCToast && KCToast(copiedMsg);
+    } catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = pageUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      window.KCToast && KCToast(copiedMsg);
+    }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

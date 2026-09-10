@@ -54,6 +54,7 @@
   <div class="admin-panel" id="tab-users">
     <div class="card glass admin-table-card">
       <h2>Üyeler</h2>
+      <p class="sub">Yardımcı (Kadir) rolü yalnızca ödemeleri yönetebilir — kullanıcı / ayar yetkisi yok.</p>
       <form class="admin-filters" method="get" action="{{ url_for('admin_page') }}">
         <input type="hidden" name="tab" value="users" />
         <input type="search" name="q" value="{{ q }}" placeholder="Ad veya e-posta ara…" />
@@ -82,7 +83,7 @@
               <td>{{ u.email }}</td>
               <td>{{ u.created_at }}</td>
               <td>
-                {% if u.is_admin %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge badge-user">Üye</span>{% endif %}
+                {% if u.is_admin %}<span class="badge badge-admin">Admin</span>{% elif u.is_helper %}<span class="badge badge-pending">Yardımcı</span>{% else %}<span class="badge badge-user">Üye</span>{% endif %}
                 {% if u.is_blocked %}<span class="badge badge-bad">Engelli</span>{% endif %}
               </td>
               <td class="actions-cell">
@@ -93,6 +94,11 @@
                   <button type="button" class="mini-btn" data-act="toggle-admin" data-admin="{{ 1 if u.is_admin else 0 }}">
                     {% if u.is_admin %}Yetkiyi Al{% else %}Admin Yap{% endif %}
                   </button>
+                  {% if not u.is_admin %}
+                  <button type="button" class="mini-btn" data-act="toggle-helper" data-helper="{{ 1 if u.is_helper else 0 }}">
+                    {% if u.is_helper %}Yardımcıyı Al{% else %}Yardımcı Yap{% endif %}
+                  </button>
+                  {% endif %}
                   <button type="button" class="mini-btn mini-danger" data-act="delete">Sil</button>
                 {% else %}
                   <span class="muted-tiny">Siz</span>
@@ -247,6 +253,10 @@
           const is_admin = btn.dataset.admin !== "1";
           await api("/api/admin/users/" + id + "/admin", { is_admin });
           KCToast(is_admin ? "Yönetici yapıldı" : "Yetki alındı");
+        } else if (act === "toggle-helper") {
+          const is_helper = btn.dataset.helper !== "1";
+          await api("/api/admin/users/" + id + "/helper", { is_helper });
+          KCToast(is_helper ? "Yardımcı yapıldı" : "Yardımcı yetkisi alındı");
         } else if (act === "delete") {
           if (!confirm("Bu kullanıcı silinsin mi?")) return;
           await api("/api/admin/users/" + id + "/delete", {});

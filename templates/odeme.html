@@ -1,60 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Ödeme — {{ site.site_title }}{% endblock %}
+{% block title %}{{ t('pay_title') }} — {{ site.site_title }}{% endblock %}
 {% block content %}
 <section class="section fade-in">
-  <h2 class="section-title">Ödeme</h2>
-  <p class="section-sub">Hoş geldiniz, {{ user.name }} · Havale / EFT ile güvenli bildirim</p>
+  <h2 class="section-title">{{ t('pay_title') }}</h2>
+  <p class="section-sub">{{ t('pay_welcome', name=user.name) }}</p>
 
   <div class="pay-grid">
     <div class="card glass pay-panel">
-      <div class="panel-kicker">Adım 1</div>
-      <h2>Banka Bilgileri</h2>
-      <p class="sub">Tutarı aşağıdaki hesaba havale / EFT ile gönderin. Kart numarası veya CVV istenmez.</p>
+      <div class="panel-kicker">{{ t('pay_step1') }}</div>
+      <h2>{{ t('pay_bank_title') }}</h2>
+      <p class="sub">{{ t('pay_bank_sub') }}</p>
 
       <div class="bank-box bank-card">
         <div class="bank-row">
-          <span class="k">Alıcı</span>
+          <span class="k">{{ t('pay_recipient') }}</span>
           <span class="v">{{ bank.recipient }}</span>
         </div>
         <div class="bank-row">
-          <span class="k">Banka</span>
+          <span class="k">{{ t('pay_bank') }}</span>
           <span class="v">{{ bank.bank_name }}</span>
         </div>
         <div class="bank-row iban-row">
-          <span class="k">IBAN</span>
+          <span class="k">{{ t('pay_iban') }}</span>
           <div class="iban-actions">
             <span class="v iban-text" id="iban-display">{{ bank.iban }}</span>
-            <button type="button" class="copy-btn" id="copy-iban" data-iban="{{ bank.iban_plain }}">Kopyala</button>
+            <button type="button" class="copy-btn" id="copy-iban" data-iban="{{ bank.iban_plain }}">{{ t('pay_copy') }}</button>
           </div>
         </div>
       </div>
 
       <ol class="pay-steps">
-        <li>Yukarıdaki IBAN’a havale / EFT yapın.</li>
-        <li>Tutarı ve isteğe bağlı notu girin.</li>
-        <li><strong>Ödeme Bildirimi Gönder</strong> ile kayıt oluşturun; Kadir’e WhatsApp mesajı açılır.</li>
+        <li>{{ t('pay_step_li1') }}</li>
+        <li>{{ t('pay_step_li2') }}</li>
+        <li>{{ t('pay_step_li3') }}</li>
       </ol>
     </div>
 
     <div class="card glass pay-panel">
-      <div class="panel-kicker">Adım 2</div>
-      <h2>Ödeme Bildirimi</h2>
-      <p class="sub">Havale yaptıktan sonra bildiriminizi gönderin. Onay bekleyen kayıt oluşturulur.</p>
+      <div class="panel-kicker">{{ t('pay_step2') }}</div>
+      <h2>{{ t('pay_notify_title') }}</h2>
+      <p class="sub">{{ t('pay_notify_sub') }}</p>
 
       <form id="pay-form" novalidate>
         <div class="form-group">
-          <label for="amount">Tutar (₺)</label>
+          <label for="amount">{{ t('pay_amount') }}</label>
           <div class="pay-amount-wrap">
             <span class="currency" aria-hidden="true">₺</span>
             <input id="amount" name="amount" type="number" min="1" step="0.01" required placeholder="0,00" inputmode="decimal" autocomplete="off" />
           </div>
         </div>
         <div class="form-group">
-          <label for="note">Açıklama / Not <span class="optional">(isteğe bağlı)</span></label>
-          <textarea id="note" name="note" maxlength="500" placeholder="Örn. dekont no, referans…"></textarea>
+          <label for="note">{{ t('pay_note') }} <span class="optional">{{ t('pay_optional') }}</span></label>
+          <textarea id="note" name="note" maxlength="500" placeholder="{{ t('pay_note_ph') }}"></textarea>
         </div>
         <button class="btn btn-gold btn-block" type="submit" id="cta-btn">
-          Ödeme Bildirimi Gönder
+          {{ t('pay_submit') }}
         </button>
       </form>
 
@@ -66,6 +66,14 @@
 {% endblock %}
 {% block scripts %}
 <script>
+const I18N_PAY = {
+  submit: {{ t('pay_submit')|tojson }},
+  sending: {{ t('pay_sending')|tojson }},
+  invalid: {{ t('pay_invalid_amount')|tojson }},
+  toastOk: {{ t('pay_toast_ok')|tojson }},
+  fail: {{ t('pay_fail')|tojson }},
+  conn: {{ t('pay_conn')|tojson }},
+};
 document.getElementById("pay-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = document.getElementById("form-error");
@@ -77,15 +85,15 @@ document.getElementById("pay-form").addEventListener("submit", async (e) => {
   const amount = parseFloat(document.getElementById("amount").value);
   const note = document.getElementById("note").value.trim();
   if (!amount || amount <= 0) {
-    err.textContent = "Geçerli bir tutar girin";
+    err.textContent = I18N_PAY.invalid;
     err.classList.add("show");
-    window.KCToast && KCToast("Geçerli bir tutar girin", true);
+    window.KCToast && KCToast(I18N_PAY.invalid, true);
     return;
   }
 
   btn.disabled = true;
   btn.classList.add("is-loading");
-  btn.textContent = "Gönderiliyor…";
+  btn.textContent = I18N_PAY.sending;
   try {
     const res = await fetch("/api/payment-notify", {
       method: "POST",
@@ -95,26 +103,26 @@ document.getElementById("pay-form").addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (data.ok && data.redirect) {
-      window.KCToast && KCToast("Bildirim alındı — Kadir'e WhatsApp açılıyor");
+      window.KCToast && KCToast(I18N_PAY.toastOk);
       if (data.whatsapp_url) {
         window.open(data.whatsapp_url, "_blank", "noopener,noreferrer");
       }
       window.location.href = data.redirect;
       return;
     }
-    err.textContent = data.error || "Bildirim gönderilemedi";
+    err.textContent = data.error || I18N_PAY.fail;
     err.classList.add("show");
-    window.KCToast && KCToast(data.error || "Bildirim gönderilemedi", true);
+    window.KCToast && KCToast(data.error || I18N_PAY.fail, true);
     btn.disabled = false;
     btn.classList.remove("is-loading");
-    btn.textContent = "Ödeme Bildirimi Gönder";
+    btn.textContent = I18N_PAY.submit;
   } catch (_) {
-    err.textContent = "Bağlantı hatası";
+    err.textContent = I18N_PAY.conn;
     err.classList.add("show");
-    window.KCToast && KCToast("Bağlantı hatası", true);
+    window.KCToast && KCToast(I18N_PAY.conn, true);
     btn.disabled = false;
     btn.classList.remove("is-loading");
-    btn.textContent = "Ödeme Bildirimi Gönder";
+    btn.textContent = I18N_PAY.submit;
   }
 });
 </script>

@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Giriş — {{ site.site_title }}{% endblock %}
+{% block title %}{{ t('login_title') }} — {{ site.site_title }}{% endblock %}
 {% block content %}
 <section class="section fade-in auth-section">
   <div class="card glass auth-card">
-    <div class="panel-kicker">Hesap</div>
-    <h2>Giriş Yap</h2>
-    <p class="sub">Ödeme bildirimi ve kişisel alan için oturum açın</p>
+    <div class="panel-kicker">{{ t('account_kicker') }}</div>
+    <h2>{{ t('login_title') }}</h2>
+    <p class="sub">{{ t('login_sub') }}</p>
     <form id="login-form" novalidate>
       <div class="form-group">
-        <label for="email">E-posta</label>
+        <label for="email">{{ t('login_email') }}</label>
         <input id="email" name="email" type="email" required autocomplete="username" placeholder="ornek@mail.com" />
       </div>
       <div class="form-group">
-        <label for="password">Şifre</label>
+        <label for="password">{{ t('login_password') }}</label>
         <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
       </div>
-      <button class="btn btn-gold btn-block" type="submit" id="login-btn">Giriş Yap</button>
+      <button class="btn btn-gold btn-block" type="submit" id="login-btn">{{ t('login_btn') }}</button>
     </form>
     <div id="form-error" class="form-error" role="alert"></div>
     {% if site.registration_open %}
-    <p class="auth-switch">Hesabınız yok mu? <a href="{{ url_for('register_page') }}">Kayıt olun</a></p>
+    <p class="auth-switch">{{ t('login_switch') }} <a href="{{ url_for('register_page') }}">{{ t('login_switch_link') }}</a></p>
     {% endif %}
   </div>
 </section>
@@ -45,16 +45,21 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (data.ok) {
-      KCToast && KCToast("Hoş geldiniz");
-      const next = {{ (next or '/odeme')|tojson }};
+      KCToast && KCToast({{ t('login_welcome')|tojson }});
+      let next = {{ (next or '/odeme')|tojson }};
+      if (data.user && data.user.is_helper && !data.user.is_admin) {
+        next = "/admin/odemeler";
+      } else if (data.user && data.user.is_admin && (!next || next === "/odeme")) {
+        next = "/admin";
+      }
       window.location.href = next || "/odeme";
       return;
     }
-    err.textContent = data.error || "Giriş başarısız";
+    err.textContent = data.error || {{ t('login_fail')|tojson }};
     err.classList.add("show");
-    KCToast && KCToast(data.error || "Giriş başarısız", true);
+    KCToast && KCToast(data.error || {{ t('login_fail')|tojson }}, true);
   } catch (_) {
-    err.textContent = "Bağlantı hatası";
+    err.textContent = {{ t('pay_conn')|tojson }};
     err.classList.add("show");
   } finally {
     btn.disabled = false;

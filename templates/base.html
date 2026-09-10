@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="{{ lang|default('tr') }}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,7 +8,7 @@
   <meta property="og:title" content="{% block og_title %}{{ site.site_title }}{% endblock %}" />
   <meta property="og:description" content="{{ site.tagline or 'Kişisel alan · havale ile güvenli ödeme · Instagram' }}" />
   <meta property="og:type" content="website" />
-  <meta property="og:locale" content="tr_TR" />
+  <meta property="og:locale" content="{{ og_locale|default('tr_TR') }}" />
   <meta name="twitter:card" content="summary" />
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
   <title>{% block title %}{{ site.site_title }}{% endblock %}</title>
@@ -28,29 +28,36 @@
         <span class="brand-mark" aria-hidden="true">K</span>
         <span class="brand-text-wrap">
           <span class="brand-text">{{ site.site_title }}</span>
-          <span class="brand-credit">Kurucu Yardımcısı · Kadir Karadeniz</span>
+          <span class="brand-credit">{{ t('brand_credit') }}</span>
         </span>
       </a>
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menüyü aç" aria-expanded="false" aria-controls="site-nav">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="{{ t('nav_menu') }}" aria-expanded="false" aria-controls="site-nav">
         <span></span><span></span><span></span>
       </button>
       <nav class="site-nav" id="site-nav">
-        <a class="nav-link" href="{{ url_for('index') }}">Ana Sayfa</a>
+        <a class="nav-link" href="{{ url_for('index') }}">{{ t('nav_home') }}</a>
         {% if user %}
-          <a class="nav-link" href="{{ url_for('payment_page') }}">Ödeme</a>
+          <a class="nav-link" href="{{ url_for('payment_page') }}">{{ t('nav_payment') }}</a>
           {% if user.is_admin %}
-          <a class="nav-link" href="{{ url_for('admin_page') }}">Admin</a>
+          <a class="nav-link" href="{{ url_for('admin_page') }}">{{ t('nav_admin') }}</a>
+          {% elif user.is_helper %}
+          <a class="nav-link" href="{{ url_for('admin_payments_page') }}">{{ t('nav_helper') }}</a>
           {% endif %}
           <span class="nav-user" title="{{ user.email }}">{{ user.name }}</span>
-          <a class="nav-link nav-cta" href="{{ url_for('logout_redirect') }}">Çıkış</a>
+          <a class="nav-link nav-cta" href="{{ url_for('logout_redirect') }}">{{ t('nav_logout') }}</a>
         {% else %}
-          <a class="nav-link" href="{{ url_for('login_page') }}">Giriş</a>
+          <a class="nav-link" href="{{ url_for('login_page') }}">{{ t('nav_login') }}</a>
           {% if site.registration_open %}
-          <a class="nav-link nav-cta" href="{{ url_for('register_page') }}">Kayıt</a>
+          <a class="nav-link nav-cta" href="{{ url_for('register_page') }}">{{ t('nav_register') }}</a>
           {% endif %}
         {% endif %}
         <a class="nav-link nav-ig" href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">@{{ site.instagram_handle }}</a>
-        <a class="nav-link nav-wa" href="{{ site.whatsapp.url }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a class="nav-link nav-wa" href="{{ site.whatsapp.url }}" target="_blank" rel="noopener noreferrer">{{ t('nav_whatsapp') }}</a>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <a class="lang-btn{% if lang == 'tr' %} active{% endif %}" href="{{ url_for('set_lang', code='tr', next=request.full_path) }}">TR</a>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <a class="lang-btn{% if lang == 'en' %} active{% endif %}" href="{{ url_for('set_lang', code='en', next=request.full_path) }}">EN</a>
+        </div>
       </nav>
     </div>
   </header>
@@ -66,24 +73,24 @@
       <div class="footer-links">
         <a href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>
         {% if user %}
-        <a href="{{ url_for('payment_page') }}">Ödeme</a>
+        <a href="{{ url_for('payment_page') }}">{{ t('footer_payment') }}</a>
         {% else %}
-        <a href="{{ url_for('login_page') }}">Giriş</a>
+        <a href="{{ url_for('login_page') }}">{{ t('footer_login') }}</a>
         {% endif %}
       </div>
       <div class="footer-credit">
-        <span class="footer-credit-label">Kurucu Yardımcısı</span>
-        <span class="footer-credit-name">Kadir Karadeniz</span>
+        <span class="footer-credit-label">{{ t('footer_credit_label') }}</span>
+        <span class="footer-credit-name">{{ t('footer_credit_name') }}</span>
       </div>
-      <p class="footer-note">Kart bilgisi toplanmaz · Havale / EFT bildirimi</p>
+      <p class="footer-note">{{ t('footer_note') }}</p>
     </div>
   </footer>
 
-  <a class="wa-fab" href="{{ site.whatsapp.url }}?text={{ 'Merhaba Kadir,'|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp ile Kadir Karadeniz">
+  <a class="wa-fab" href="{{ site.whatsapp.url }}?text={{ t('wa_hello')|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="{{ t('wa_fab_aria') }}">
     <span class="wa-fab-icon" aria-hidden="true">
       <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16.01 3C9.39 3 4 8.39 4 15.02c0 2.66.86 5.12 2.32 7.13L4 29l7.07-2.26A11.95 11.95 0 0 0 16.01 27C22.63 27 28 21.61 28 14.98 28 8.39 22.63 3 16.01 3zm0 21.82c-2.1 0-4.05-.62-5.7-1.7l-.41-.26-4.2 1.34 1.37-4.09-.27-.43A9.73 9.73 0 0 1 6.2 15.02c0-5.4 4.4-9.8 9.81-9.8s9.8 4.4 9.8 9.8-4.39 9.8-9.8 9.8zm5.37-7.33c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15-.19.29-.76.95-.93 1.14-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.59.13-.13.29-.34.43-.51.15-.17.19-.29.29-.49.1-.2.05-.37-.02-.52-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3c.15.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.61.7.22 1.34.19 1.85.12.56-.08 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35z"/></svg>
     </span>
-    <span class="wa-fab-text">WhatsApp<br><small>Kadir</small></span>
+    <span class="wa-fab-text">{{ t('wa_fab_text') }}<br><small>{{ t('wa_fab_sub') }}</small></span>
   </a>
 
   <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>

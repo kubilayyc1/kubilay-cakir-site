@@ -10,17 +10,21 @@ import uuid
 from functools import wraps
 from urllib.parse import quote, urlparse
 
+from io import BytesIO
+
 from flask import (
     Flask,
     abort,
     g,
     jsonify,
+    make_response,
     redirect,
     render_template,
     request,
     session,
     url_for,
 )
+from PIL import Image, ImageDraw, ImageFont
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +34,10 @@ DB_PATH = os.path.join(_data_dir, "users.db")
 
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "kubilaycakir54@yahoo.com")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Kubilay8181")
+HELPER_EMAIL_DEFAULT = "kadir@kubilaycakir.com"
+HELPER_PASSWORD = os.environ.get("HELPER_PASSWORD", "KadirYardimci2026!")
+HELPER_NAME = "Kadir Karadeniz"
+SITE_PUBLIC_URL = os.environ.get("SITE_PUBLIC_URL", "https://kubilay-cakir.onrender.com")
 
 DEFAULT_IBAN = "TR83 0015 7000 0000 0205 4704 26"
 DEFAULT_BANK = "Enpara"
@@ -61,7 +69,250 @@ DEFAULT_SETTINGS = {
     "bank_recipient": DEFAULT_RECIPIENT,
 }
 
+
 PAYMENT_STATUSES = {"pending", "approved", "rejected"}
+
+I18N = {
+    "tr": {
+        "nav_home": "Ana Sayfa",
+        "nav_payment": "Ödeme",
+        "nav_admin": "Admin",
+        "nav_helper": "Ödemeler",
+        "nav_login": "Giriş",
+        "nav_register": "Kayıt",
+        "nav_logout": "Çıkış",
+        "nav_whatsapp": "WhatsApp",
+        "nav_menu": "Menüyü aç",
+        "brand_credit": "Kurucu Yardımcısı · Kadir Karadeniz",
+        "footer_credit_label": "Kurucu Yardımcısı",
+        "footer_credit_name": "Kadir Karadeniz",
+        "footer_note": "Kart bilgisi toplanmaz · Havale / EFT bildirimi",
+        "footer_payment": "Ödeme",
+        "footer_login": "Giriş",
+        "wa_fab_aria": "WhatsApp ile Kadir Karadeniz",
+        "wa_fab_text": "WhatsApp",
+        "wa_fab_sub": "Kadir",
+        "wa_hello": "Merhaba Kadir,",
+        "hero_eyebrow": "Kişisel · Güvenli · Zarif",
+        "hero_credit": "Kurucu Yardımcısı · Kadir Karadeniz",
+        "hero_pay": "Ödeme Ekranı",
+        "hero_admin": "Yönetim",
+        "hero_login_pay": "Ödeme İçin Giriş Yap",
+        "hero_register": "Hesap Oluştur",
+        "hero_pill_havale": "Havale / EFT",
+        "hero_pill_nocard": "Kart bilgisi yok",
+        "hero_pill_admin": "Yönetici onayı",
+        "ig_title": "Instagram",
+        "ig_sub": "Beni Instagram’da takip edin",
+        "ig_open": "Profili Aç",
+        "lock_note": "Ödeme ekranı için giriş yapmanız gerekir.",
+        "lock_note_reg": " Hesabınız yoksa birkaç saniyede kayıt olabilirsiniz.",
+        "pay_title": "Ödeme",
+        "pay_welcome": "Hoş geldiniz, {name} · Havale / EFT ile güvenli bildirim",
+        "pay_step1": "Adım 1",
+        "pay_bank_title": "Banka Bilgileri",
+        "pay_bank_sub": "Tutarı aşağıdaki hesaba havale / EFT ile gönderin. Kart numarası veya CVV istenmez.",
+        "pay_recipient": "Alıcı",
+        "pay_bank": "Banka",
+        "pay_iban": "IBAN",
+        "pay_copy": "Kopyala",
+        "pay_step_li1": "Yukarıdaki IBAN’a havale / EFT yapın.",
+        "pay_step_li2": "Tutarı ve isteğe bağlı notu girin.",
+        "pay_step_li3": "Ödeme Bildirimi Gönder ile kayıt oluşturun; Kadir’e WhatsApp mesajı açılır.",
+        "pay_step2": "Adım 2",
+        "pay_notify_title": "Ödeme Bildirimi",
+        "pay_notify_sub": "Havale yaptıktan sonra bildiriminizi gönderin. Onay bekleyen kayıt oluşturulur.",
+        "pay_amount": "Tutar (₺)",
+        "pay_note": "Açıklama / Not",
+        "pay_optional": "(isteğe bağlı)",
+        "pay_note_ph": "Örn. dekont no, referans…",
+        "pay_submit": "Ödeme Bildirimi Gönder",
+        "pay_sending": "Gönderiliyor…",
+        "pay_invalid_amount": "Geçerli bir tutar girin",
+        "pay_toast_ok": "Bildirim alındı — Kadir'e WhatsApp açılıyor",
+        "pay_fail": "Bildirim gönderilemedi",
+        "pay_conn": "Bağlantı hatası",
+        "result_title": "Ödeme Sonucu",
+        "result_approved": "Onaylandı",
+        "result_pending": "Bildirim Alındı",
+        "result_rejected": "Reddedildi",
+        "result_msg_pending": "Ödeme bildiriminiz alındı. Yönetici onayından sonra tamamlanır.",
+        "result_msg_approved": "Ödemeniz onaylandı. Teşekkürler!",
+        "result_msg_rejected": "Ödeme bildiriminiz reddedildi. Gerekirse tekrar deneyin.",
+        "result_msg_other": "Ödeme kaydı güncellendi.",
+        "result_amount": "Tutar",
+        "result_note": "Not",
+        "result_id": "Kayıt No",
+        "result_ref": "Referans",
+        "result_status": "Durum",
+        "badge_approved": "onaylandı",
+        "badge_rejected": "reddedildi",
+        "badge_pending": "beklemede",
+        "result_wa": "WhatsApp’ta Kadir’e Bildir",
+        "result_new": "Yeni Bildirim",
+        "result_home": "Ana Sayfa",
+        "share_title": "Teşekkür Kartı",
+        "share_download": "PNG İndir",
+        "share_copy": "Bağlantıyı Kopyala",
+        "share_web": "Paylaş",
+        "share_copied": "Bağlantı kopyalandı",
+        "card_pending": "Ödeme bildirimi alındı",
+        "card_approved": "Ödeme bildirimi onaylandı",
+        "card_rejected": "Ödeme bildirimi reddedildi",
+        "card_credit": "Kurucu Yardımcısı · Kadir Karadeniz",
+        "login_title": "Giriş Yap",
+        "login_sub": "Ödeme bildirimi ve kişisel alan için oturum açın",
+        "login_email": "E-posta",
+        "login_password": "Şifre",
+        "login_btn": "Giriş Yap",
+        "login_switch": "Hesabınız yok mu?",
+        "login_switch_link": "Kayıt olun",
+        "login_welcome": "Hoş geldiniz",
+        "login_fail": "Giriş başarısız",
+        "reg_title": "Hesap Oluştur",
+        "reg_closed": "Kayıtlar Kapalı",
+        "reg_closed_sub": "Şu an yeni hesap oluşturulamaz. Daha sonra tekrar deneyin.",
+        "reg_to_login": "Giriş Sayfası",
+        "reg_sub": "Birkaç saniyede kayıt olun — kart bilgisi istenmez",
+        "reg_name": "Ad Soyad",
+        "reg_email": "E-posta",
+        "reg_password": "Şifre",
+        "reg_btn": "Kayıt Ol",
+        "reg_switch": "Zaten hesabınız var mı?",
+        "reg_switch_link": "Giriş yapın",
+        "reg_ok": "Hesap oluşturuldu",
+        "reg_fail": "Kayıt başarısız",
+        "account_kicker": "Hesap",
+    },
+    "en": {
+        "nav_home": "Home",
+        "nav_payment": "Payment",
+        "nav_admin": "Admin",
+        "nav_helper": "Payments",
+        "nav_login": "Log in",
+        "nav_register": "Sign up",
+        "nav_logout": "Log out",
+        "nav_whatsapp": "WhatsApp",
+        "nav_menu": "Open menu",
+        "brand_credit": "Co-founder · Kadir Karadeniz",
+        "footer_credit_label": "Co-founder",
+        "footer_credit_name": "Kadir Karadeniz",
+        "footer_note": "No card data collected · Wire / EFT notification",
+        "footer_payment": "Payment",
+        "footer_login": "Log in",
+        "wa_fab_aria": "WhatsApp Kadir Karadeniz",
+        "wa_fab_text": "WhatsApp",
+        "wa_fab_sub": "Kadir",
+        "wa_hello": "Hello Kadir,",
+        "hero_eyebrow": "Personal · Secure · Elegant",
+        "hero_credit": "Co-founder · Kadir Karadeniz",
+        "hero_pay": "Payment Screen",
+        "hero_admin": "Admin",
+        "hero_login_pay": "Log in to Pay",
+        "hero_register": "Create Account",
+        "hero_pill_havale": "Wire / EFT",
+        "hero_pill_nocard": "No card data",
+        "hero_pill_admin": "Admin approval",
+        "ig_title": "Instagram",
+        "ig_sub": "Follow me on Instagram",
+        "ig_open": "Open Profile",
+        "lock_note": "You need to log in to use the payment screen.",
+        "lock_note_reg": " If you don’t have an account, you can register in seconds.",
+        "pay_title": "Payment",
+        "pay_welcome": "Welcome, {name} · Secure wire / EFT notification",
+        "pay_step1": "Step 1",
+        "pay_bank_title": "Bank Details",
+        "pay_bank_sub": "Transfer the amount to the account below. No card number or CVV required.",
+        "pay_recipient": "Recipient",
+        "pay_bank": "Bank",
+        "pay_iban": "IBAN",
+        "pay_copy": "Copy",
+        "pay_step_li1": "Send a wire / EFT to the IBAN above.",
+        "pay_step_li2": "Enter the amount and an optional note.",
+        "pay_step_li3": "Submit Payment Notification to create a record; WhatsApp to Kadir opens.",
+        "pay_step2": "Step 2",
+        "pay_notify_title": "Payment Notification",
+        "pay_notify_sub": "After transferring, send your notification. A pending record is created.",
+        "pay_amount": "Amount (₺)",
+        "pay_note": "Description / Note",
+        "pay_optional": "(optional)",
+        "pay_note_ph": "e.g. receipt no, reference…",
+        "pay_submit": "Send Payment Notification",
+        "pay_sending": "Sending…",
+        "pay_invalid_amount": "Enter a valid amount",
+        "pay_toast_ok": "Notification received — opening WhatsApp to Kadir",
+        "pay_fail": "Could not send notification",
+        "pay_conn": "Connection error",
+        "result_title": "Payment Result",
+        "result_approved": "Approved",
+        "result_pending": "Notification Received",
+        "result_rejected": "Rejected",
+        "result_msg_pending": "Your payment notification was received. It will complete after admin approval.",
+        "result_msg_approved": "Your payment was approved. Thank you!",
+        "result_msg_rejected": "Your payment notification was rejected. Please try again if needed.",
+        "result_msg_other": "Payment record updated.",
+        "result_amount": "Amount",
+        "result_note": "Note",
+        "result_id": "Record No",
+        "result_ref": "Reference",
+        "result_status": "Status",
+        "badge_approved": "approved",
+        "badge_rejected": "rejected",
+        "badge_pending": "pending",
+        "result_wa": "Notify Kadir on WhatsApp",
+        "result_new": "New Notification",
+        "result_home": "Home",
+        "share_title": "Thank-you Card",
+        "share_download": "Download PNG",
+        "share_copy": "Copy Link",
+        "share_web": "Share",
+        "share_copied": "Link copied",
+        "card_pending": "Payment notification received",
+        "card_approved": "Payment notification approved",
+        "card_rejected": "Payment notification rejected",
+        "card_credit": "Co-founder · Kadir Karadeniz",
+        "login_title": "Log In",
+        "login_sub": "Sign in for payment notifications and your personal area",
+        "login_email": "Email",
+        "login_password": "Password",
+        "login_btn": "Log In",
+        "login_switch": "Don’t have an account?",
+        "login_switch_link": "Sign up",
+        "login_welcome": "Welcome",
+        "login_fail": "Login failed",
+        "reg_title": "Create Account",
+        "reg_closed": "Registration Closed",
+        "reg_closed_sub": "New accounts cannot be created right now. Please try later.",
+        "reg_to_login": "Login Page",
+        "reg_sub": "Register in seconds — no card details required",
+        "reg_name": "Full Name",
+        "reg_email": "Email",
+        "reg_password": "Password",
+        "reg_btn": "Sign Up",
+        "reg_switch": "Already have an account?",
+        "reg_switch_link": "Log in",
+        "reg_ok": "Account created",
+        "reg_fail": "Registration failed",
+        "account_kicker": "Account",
+    },
+}
+
+
+def get_lang() -> str:
+    lang = (request.cookies.get("lang") or session.get("lang") or "tr").lower()
+    return lang if lang in ("tr", "en") else "tr"
+
+
+def t(key: str, **kwargs) -> str:
+    lang = get_lang()
+    text = I18N.get(lang, I18N["tr"]).get(key) or I18N["tr"].get(key) or key
+    if kwargs:
+        try:
+            return text.format(**kwargs)
+        except Exception:
+            return text
+    return text
+
 
 
 def get_db():
@@ -87,6 +338,7 @@ def ensure_column(db, table: str, column: str, ddl: str) -> None:
 
 def init_db():
     db = sqlite3.connect(DB_PATH)
+    db.row_factory = sqlite3.Row
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -102,6 +354,7 @@ def init_db():
     )
     ensure_column(db, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
     ensure_column(db, "users", "is_blocked", "is_blocked INTEGER NOT NULL DEFAULT 0")
+    ensure_column(db, "users", "is_helper", "is_helper INTEGER NOT NULL DEFAULT 0")
 
     db.execute(
         """
@@ -140,6 +393,7 @@ def init_db():
         )
     db.commit()
     ensure_admin(db)
+    ensure_helper(db)
     db.close()
 
 
@@ -156,10 +410,55 @@ def ensure_admin(db):
     else:
         db.execute(
             """
-            INSERT INTO users (name, email, password_hash, is_admin, is_blocked)
-            VALUES (?, ?, ?, 1, 0)
+            INSERT INTO users (name, email, password_hash, is_admin, is_blocked, is_helper)
+            VALUES (?, ?, ?, 1, 0, 0)
             """,
             ("Admin", ADMIN_EMAIL, pw_hash),
+        )
+    db.commit()
+
+
+def helper_email_from_settings(db) -> str:
+    row = db.execute(
+        "SELECT value FROM settings WHERE key = ?", ("helper_email",)
+    ).fetchone()
+    if row and (row["value"] or "").strip():
+        return row["value"].strip().lower()
+    return HELPER_EMAIL_DEFAULT
+
+
+def ensure_helper(db):
+    """Seed/ensure Kadir helper account (is_helper=1, is_admin=0).
+    Full admins can also promote helpers in the admin UI.
+    """
+    email = helper_email_from_settings(db)
+    pw_hash = generate_password_hash(HELPER_PASSWORD)
+    row = db.execute(
+        "SELECT id, is_admin FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    if row:
+        # Do not demote a full admin; just ensure helper flag if not admin
+        if row["is_admin"]:
+            db.execute(
+                "UPDATE users SET is_blocked = 0, name = ? WHERE email = ?",
+                (HELPER_NAME, email),
+            )
+        else:
+            db.execute(
+                """
+                UPDATE users SET is_helper = 1, is_admin = 0, is_blocked = 0,
+                    password_hash = ?, name = ?
+                WHERE email = ?
+                """,
+                (pw_hash, HELPER_NAME, email),
+            )
+    else:
+        db.execute(
+            """
+            INSERT INTO users (name, email, password_hash, is_admin, is_blocked, is_helper)
+            VALUES (?, ?, ?, 0, 0, 1)
+            """,
+            (HELPER_NAME, email, pw_hash),
         )
     db.commit()
 
@@ -256,32 +555,38 @@ def site_ctx() -> dict:
 
 @app.context_processor
 def inject_site():
+    lang = "tr"
     try:
-        return {"site": site_ctx()}
+        lang = get_lang()
     except Exception:
-        return {
-            "site": {
-                "site_title": "Kubilay Çakır",
-                "tagline": "Kişisel alan · havale ile güvenli ödeme · Instagram",
-                "instagram_handle": "kubilayyc1",
-                "instagram_url": "https://instagram.com/kubilayyc1",
-                "registration_open": True,
-                "maintenance_mode": False,
-                "payment_ready": True,
-                "whatsapp": {
-                    "phone": DEFAULT_WHATSAPP,
-                    "label": DEFAULT_WHATSAPP_LABEL,
-                    "url": f"https://wa.me/{DEFAULT_WHATSAPP}",
-                    "display": "+90 (533) 121 15 80",
-                },
-                "bank": {
-                    "iban": DEFAULT_IBAN,
-                    "iban_plain": DEFAULT_IBAN.replace(" ", ""),
-                    "bank_name": DEFAULT_BANK,
-                    "recipient": DEFAULT_RECIPIENT,
-                },
-            }
+        lang = "tr"
+    base = {"lang": lang, "t": t, "og_locale": "tr_TR" if lang == "tr" else "en_US"}
+    try:
+        base["site"] = site_ctx()
+        return base
+    except Exception:
+        base["site"] = {
+            "site_title": "Kubilay Çakır",
+            "tagline": "Kişisel alan · havale ile güvenli ödeme · Instagram",
+            "instagram_handle": "kubilayyc1",
+            "instagram_url": "https://instagram.com/kubilayyc1",
+            "registration_open": True,
+            "maintenance_mode": False,
+            "payment_ready": True,
+            "whatsapp": {
+                "phone": DEFAULT_WHATSAPP,
+                "label": DEFAULT_WHATSAPP_LABEL,
+                "url": f"https://wa.me/{DEFAULT_WHATSAPP}",
+                "display": "+90 (533) 121 15 80",
+            },
+            "bank": {
+                "iban": DEFAULT_IBAN,
+                "iban_plain": DEFAULT_IBAN.replace(" ", ""),
+                "bank_name": DEFAULT_BANK,
+                "recipient": DEFAULT_RECIPIENT,
+            },
         }
+        return base
 
 
 def current_user():
@@ -290,7 +595,7 @@ def current_user():
         return None
     row = get_db().execute(
         """
-        SELECT id, name, email, is_admin, is_blocked, created_at
+        SELECT id, name, email, is_admin, is_helper, is_blocked, created_at
         FROM users WHERE id = ?
         """,
         (uid,),
@@ -302,6 +607,7 @@ def current_user():
         return None
     user = dict(row)
     user["is_admin"] = bool(user.get("is_admin"))
+    user["is_helper"] = bool(user.get("is_helper"))
     user["is_blocked"] = bool(user.get("is_blocked"))
     return user
 
@@ -347,6 +653,34 @@ def admin_required_api(fn):
         if not user:
             return jsonify({"ok": False, "error": "Giriş gerekli"}), 401
         if not user.get("is_admin"):
+            return jsonify({"ok": False, "error": "Yetkisiz"}), 403
+        return fn(user, *args, **kwargs)
+
+    return wrapper
+
+
+def helper_or_admin_required(fn):
+    """Page access for full admin or helper (payments-only)."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user = current_user()
+        if not user:
+            return redirect(url_for("login_page", next=request.path))
+        if not (user.get("is_admin") or user.get("is_helper")):
+            abort(403)
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
+def helper_or_admin_api(fn):
+    """API access for payment approve/reject/note — admin or helper."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user = current_user()
+        if not user:
+            return jsonify({"ok": False, "error": "Giriş gerekli"}), 401
+        if not (user.get("is_admin") or user.get("is_helper")):
             return jsonify({"ok": False, "error": "Yetkisiz"}), 403
         return fn(user, *args, **kwargs)
 
@@ -407,7 +741,7 @@ def maintenance_gate():
     if not mm:
         return None
     user = current_user()
-    if user and user.get("is_admin"):
+    if user and (user.get("is_admin") or user.get("is_helper")):
         return None
     allowed = {
         "login_page",
@@ -416,6 +750,7 @@ def maintenance_gate():
         "logout_redirect",
         "static",
         "favicon",
+        "set_lang",
     }
     if request.endpoint in allowed:
         return None
@@ -430,6 +765,35 @@ def maintenance_gate():
 
 
 # ── Pages ──────────────────────────────────────────────────────────────
+
+
+@app.route("/lang/<code>")
+def set_lang(code):
+    code = (code or "").lower()
+    if code not in ("tr", "en"):
+        abort(404)
+    session["lang"] = code
+    nxt = request.args.get("next") or request.referrer or url_for("index")
+    # stay on same site
+    try:
+        from urllib.parse import urlparse as _up
+        p = _up(nxt)
+        if p.netloc and p.netloc.lower() not in (
+            request.host.lower(),
+            (request.headers.get("X-Forwarded-Host") or "").lower(),
+        ):
+            nxt = url_for("index")
+    except Exception:
+        nxt = url_for("index")
+    resp = make_response(redirect(nxt))
+    resp.set_cookie(
+        "lang",
+        code,
+        max_age=60 * 60 * 24 * 365,
+        httponly=False,
+        samesite="Lax",
+    )
+    return resp
 
 
 @app.route("/")
@@ -482,15 +846,24 @@ def payment_result(payment_id):
         "ok": row["status"] == "approved",
         "status": row["status"],
         "message": {
-            "pending": "Ödeme bildiriminiz alındı. Yönetici onayından sonra tamamlanır.",
-            "approved": "Ödemeniz onaylandı. Teşekkürler!",
-            "rejected": "Ödeme bildiriminiz reddedildi. Gerekirse tekrar deneyin.",
-        }.get(row["status"], "Ödeme kaydı güncellendi."),
+            "pending": t("result_msg_pending"),
+            "approved": t("result_msg_approved"),
+            "rejected": t("result_msg_rejected"),
+        }.get(row["status"], t("result_msg_other")),
         "payment_id": row["id"],
         "conversation_id": row["conversation_id"],
         "amount": row["amount"],
         "note": row["note"],
         "error_message": None,
+        "card_status_label": {
+            "pending": t("card_pending"),
+            "approved": t("card_approved"),
+            "rejected": t("card_rejected"),
+        }.get(row["status"], t("card_pending")),
+        "share_url": url_for(
+            "payment_card_png", payment_id=row["id"], _external=True
+        ),
+        "card_png_url": url_for("payment_card_png", payment_id=row["id"]),
     }
     result["whatsapp_url"] = whatsapp_payment_url(
         {"name": user.get("name"), "email": row["user_email"]},
@@ -503,15 +876,19 @@ def payment_result(payment_id):
 
 @app.route("/admin")
 @login_required_page
-@admin_required
 def admin_page():
+    user = current_user()
+    if user and user.get("is_helper") and not user.get("is_admin"):
+        return redirect(url_for("admin_payments_page"))
+    if not user or not user.get("is_admin"):
+        abort(403)
     db = get_db()
     q = (request.args.get("q") or "").strip()
     filter_role = (request.args.get("role") or "all").strip()
     filter_block = (request.args.get("blocked") or "all").strip()
 
     sql = """
-        SELECT id, name, email, created_at, is_admin, is_blocked
+        SELECT id, name, email, created_at, is_admin, is_helper, is_blocked
         FROM users WHERE 1=1
     """
     params: list = []
@@ -584,6 +961,181 @@ def admin_page():
         bank=bank_ctx(settings),
         status_badge_class=status_badge_class,
     )
+
+
+@app.route("/admin/odemeler")
+@login_required_page
+@helper_or_admin_required
+def admin_payments_page():
+    """Helper (and admin) payments-only view: approve / reject / pending."""
+    db = get_db()
+    payments = db.execute(
+        """
+        SELECT id, user_email, amount, currency, note, status,
+               conversation_id, payment_id, admin_note, created_at, updated_at
+        FROM payments
+        ORDER BY id DESC
+        LIMIT 100
+        """
+    ).fetchall()
+    pay_count = db.execute("SELECT COUNT(*) AS c FROM payments").fetchone()["c"]
+    pay_pending = db.execute(
+        "SELECT COUNT(*) AS c FROM payments WHERE status = 'pending'"
+    ).fetchone()["c"]
+    pay_approved = db.execute(
+        "SELECT COUNT(*) AS c FROM payments WHERE status IN ('approved', 'success')"
+    ).fetchone()["c"]
+    return render_template(
+        "admin_odemeler.html",
+        user=current_user(),
+        payments=payments,
+        stats={
+            "payments": pay_count,
+            "payments_pending": pay_pending,
+            "payments_approved": pay_approved,
+        },
+        status_badge_class=status_badge_class,
+    )
+
+
+def _load_font(size: int):
+    candidates = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                continue
+    return ImageFont.load_default()
+
+
+def render_payment_card_image(
+    *,
+    brand: str,
+    amount: float,
+    status: str,
+    status_label: str,
+    credit: str,
+    site_url: str,
+    payment_id: int,
+) -> bytes:
+    W, H = 1080, 1350
+    bg = (12, 12, 14)
+    gold = (201, 162, 39)
+    gold_light = (232, 201, 112)
+    muted = (180, 175, 160)
+    white = (245, 240, 230)
+    img = Image.new("RGB", (W, H), bg)
+    draw = ImageDraw.Draw(img)
+
+    # gold frame
+    margin = 48
+    for i, col in enumerate([(60, 48, 18), gold, (60, 48, 18)]):
+        inset = margin - 4 + i * 3
+        draw.rectangle([inset, inset, W - inset, H - inset], outline=col, width=2)
+
+    # top accent bar
+    draw.rectangle([margin + 20, margin + 28, W - margin - 20, margin + 34], fill=gold)
+
+    font_brand = _load_font(64)
+    font_sub = _load_font(28)
+    font_amount = _load_font(92)
+    font_status = _load_font(40)
+    font_small = _load_font(26)
+    font_tiny = _load_font(22)
+
+    def center_text(text, y, font, fill):
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw = bbox[2] - bbox[0]
+        draw.text(((W - tw) / 2, y), text, font=font, fill=fill)
+
+    center_text(brand or "Kubilay Çakır", 180, font_brand, gold_light)
+    center_text("K", 280, _load_font(72), gold)
+
+    # status pill background
+    pill = status_label
+    bbox = draw.textbbox((0, 0), pill, font=font_status)
+    pw, ph = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    px = (W - pw) / 2 - 36
+    py = 420
+    if status == "approved":
+        fill = (30, 55, 35)
+        outline = (125, 186, 122)
+        tfill = (160, 220, 160)
+    elif status == "rejected":
+        fill = (55, 30, 30)
+        outline = (224, 112, 112)
+        tfill = (240, 160, 160)
+    else:
+        fill = (55, 48, 25)
+        outline = gold
+        tfill = gold_light
+    draw.rounded_rectangle(
+        [px, py, px + pw + 72, py + ph + 40], radius=28, fill=fill, outline=outline, width=2
+    )
+    center_text(pill, py + 16, font_status, tfill)
+
+    center_text(f"₺{amount:,.2f}", 580, font_amount, white)
+    center_text(f"#{payment_id}", 700, font_sub, muted)
+
+    # divider
+    draw.line([(220, 780), (W - 220, 780)], fill=gold, width=2)
+
+    center_text(credit, 860, font_small, gold_light)
+    center_text(site_url.replace("https://", "").replace("http://", ""), 960, font_tiny, muted)
+    center_text("Havale / EFT · Kart bilgisi yok", 1040, font_tiny, muted)
+
+    draw.rectangle(
+        [margin + 20, H - margin - 34, W - margin - 20, H - margin - 28], fill=gold
+    )
+
+    buf = BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
+@app.route("/api/payment-card/<int:payment_id>.png")
+@login_required_page
+def payment_card_png(payment_id):
+    user = current_user()
+    row = get_db().execute(
+        "SELECT * FROM payments WHERE id = ?", (payment_id,)
+    ).fetchone()
+    if not row:
+        abort(404)
+    if (
+        row["user_id"] != user["id"]
+        and not user.get("is_admin")
+        and not user.get("is_helper")
+    ):
+        abort(403)
+    status = row["status"] or "pending"
+    label = {
+        "pending": t("card_pending"),
+        "approved": t("card_approved"),
+        "rejected": t("card_rejected"),
+    }.get(status, t("card_pending"))
+    png = render_payment_card_image(
+        brand=site_ctx()["site_title"],
+        amount=float(row["amount"] or 0),
+        status=status,
+        status_label=label,
+        credit=t("card_credit"),
+        site_url=SITE_PUBLIC_URL,
+        payment_id=row["id"],
+    )
+    resp = make_response(png)
+    resp.headers["Content-Type"] = "image/png"
+    resp.headers["Content-Disposition"] = (
+        f'inline; filename="odeme-kart-{payment_id}.png"'
+    )
+    resp.headers["Cache-Control"] = "private, max-age=60"
+    return resp
 
 
 @app.route("/favicon.ico")
@@ -659,7 +1211,7 @@ def api_login():
 
     row = get_db().execute(
         """
-        SELECT id, name, email, password_hash, is_admin, is_blocked
+        SELECT id, name, email, password_hash, is_admin, is_helper, is_blocked
         FROM users WHERE email = ?
         """,
         (email,),
@@ -680,6 +1232,7 @@ def api_login():
                 "name": row["name"],
                 "email": row["email"],
                 "is_admin": bool(row["is_admin"]),
+                "is_helper": bool(row["is_helper"]),
             },
         }
     )
@@ -803,6 +1356,32 @@ def admin_set_admin(admin, user_id):
     return jsonify({"ok": True, "is_admin": make_admin})
 
 
+@app.route("/api/admin/users/<int:user_id>/helper", methods=["POST"])
+@admin_required_api
+@require_same_origin
+def admin_set_helper(admin, user_id):
+    """Full admin can promote/demote payment helpers (Kadir role)."""
+    data = request.get_json(silent=True) or {}
+    make_helper = bool(data.get("is_helper", True))
+    db = get_db()
+    target = db.execute(
+        "SELECT id, is_admin, is_helper FROM users WHERE id = ?", (user_id,)
+    ).fetchone()
+    if not target:
+        return jsonify({"ok": False, "error": "Kullanıcı bulunamadı"}), 404
+    if target["is_admin"] and make_helper:
+        # Admins already have full access; keep is_helper=0 to avoid confusion
+        return jsonify(
+            {"ok": False, "error": "Yöneticiler zaten tüm yetkiye sahip"}
+        ), 400
+    db.execute(
+        "UPDATE users SET is_helper = ? WHERE id = ?",
+        (1 if make_helper else 0, user_id),
+    )
+    db.commit()
+    return jsonify({"ok": True, "is_helper": make_helper})
+
+
 @app.route("/api/admin/users/<int:user_id>/delete", methods=["POST"])
 @admin_required_api
 @require_same_origin
@@ -823,7 +1402,7 @@ def admin_delete_user(admin, user_id):
 
 
 @app.route("/api/admin/payments/<int:payment_id>/note", methods=["POST"])
-@admin_required_api
+@helper_or_admin_api
 @require_same_origin
 def admin_payment_note(admin, payment_id):
     data = request.get_json(silent=True) or {}
@@ -846,7 +1425,7 @@ def admin_payment_note(admin, payment_id):
 
 
 @app.route("/api/admin/payments/<int:payment_id>/status", methods=["POST"])
-@admin_required_api
+@helper_or_admin_api
 @require_same_origin
 def admin_payment_status(admin, payment_id):
     data = request.get_json(silent=True) or {}
@@ -887,6 +1466,9 @@ def admin_save_settings(admin):
         "bank_iban",
         "bank_name",
         "bank_recipient",
+        "helper_email",
+        "whatsapp_phone",
+        "whatsapp_label",
     }
     updated = []
     for key in allowed:
@@ -911,6 +1493,8 @@ def admin_save_settings(admin):
                 return jsonify({"ok": False, "error": "Alıcı adı boş olamaz"}), 400
         set_setting(key, val)
         updated.append(key)
+    if "helper_email" in updated:
+        ensure_helper(get_db())
     return jsonify({"ok": True, "updated": updated, "settings": get_all_settings()})
 
 

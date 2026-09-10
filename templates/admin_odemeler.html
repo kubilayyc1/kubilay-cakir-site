@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Ödemeler — {{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="section fade-in">
+  <h2 class="section-title">Ödeme Bildirimleri</h2>
+  <p class="section-sub">
+    {% if user.is_helper and not user.is_admin %}
+      Yardımcı paneli · yalnızca ödeme onay / red / bekleyen
+    {% else %}
+      Ödeme bildirimleri
+    {% endif %}
+  </p>
+
+  <div class="stats-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+    <div class="stat-card card glass"><div class="stat-label">Ödeme</div><div class="stat-value">{{ stats.payments }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Bekleyen</div><div class="stat-value accent-warn">{{ stats.payments_pending }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Onaylı</div><div class="stat-value accent-ok">{{ stats.payments_approved }}</div></div>
+  </div>
+
+  <div class="card glass admin-table-card" style="margin-top:1.25rem;">
+    <h2>Kayıtlar</h2>
+    <p class="sub">Kart numarası / CVV saklanmaz · son 100 kayıt · onay / red / bekleyen</p>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Kullanıcı</th><th>Tutar</th><th>Durum</th><th>Not</th><th>Admin Notu</th><th>Zaman</th><th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payments %}
+          <tr data-payment-id="{{ p.id }}">
+            <td>{{ p.id }}</td>
+            <td>{{ p.user_email or '—' }}</td>
+            <td>₺{{ '%.2f'|format(p.amount) }}</td>
+            <td class="status-cell">
+              {% set st = p.status %}
+              {% if st in ('approved','success') %}<span class="badge badge-ok">{{ st }}</span>
+              {% elif st in ('rejected','failure','error') %}<span class="badge badge-bad">{{ st }}</span>
+              {% else %}<span class="badge badge-pending">{{ st }}</span>{% endif %}
+            </td>
+            <td class="note-cell">{{ p.note or '—' }}</td>
+            <td>
+              <div class="note-edit">
+                <input type="text" class="admin-note-input" value="{{ p.admin_note or '' }}" placeholder="Not…" />
+                <button type="button" class="mini-btn" data-act="save-note">Kaydet</button>
+              </div>
+            </td>
+            <td>{{ p.created_at }}</td>
+            <td class="actions-cell pay-actions">
+              <button type="button" class="mini-btn mini-ok" data-act="set-status" data-status="approved">Onayla</button>
+              <button type="button" class="mini-btn mini-warn" data-act="set-status" data-status="pending">Beklet</button>
+              <button type="button" class="mini-btn mini-danger" data-act="set-status" data-status="rejected">Reddet</button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="empty-row">Henüz ödeme bildirimi yok</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  async function api(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body || {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "İşlem başarısız");
+    return data;
+  }
+  function badgeHtml(status) {
+    const s = (status || "").toLowerCase();
+    let cls = "badge-pending";
+    if (s === "approved" || s === "success") cls = "badge-ok";
+    else if (s === "rejected" || s === "failure" || s === "error") cls = "badge-bad";
+    return '<span class="badge ' + cls + '">' + status + "</span>";
+  }
+  document.querySelectorAll("[data-act]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const tr = btn.closest("tr");
+      const id = tr.dataset.paymentId;
+      const act = btn.dataset.act;
+      try {
+        if (act === "save-note") {
+          const note = tr.querySelector(".admin-note-input").value;
+          await api("/api/admin/payments/" + id + "/note", { admin_note: note });
+          KCToast("Not kaydedildi");
+        } else if (act === "set-status") {
+          const status = btn.dataset.status;
+          await api("/api/admin/payments/" + id + "/status", { status });
+          const cell = tr.querySelector(".status-cell");
+          if (cell) cell.innerHTML = badgeHtml(status);
+          KCToast(
+            status === "approved" ? "Ödeme onaylandı" :
+            status === "rejected" ? "Ödeme reddedildi" : "Beklemeye alındı"
+          );
+        }
+      } catch (e) {
+        KCToast(e.message || "Hata", true);
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

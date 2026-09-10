@@ -567,3 +567,100 @@ textarea { min-height: 96px; resize: vertical; }
   text-decoration: none;
 }
 .btn-wa:hover { filter: brightness(1.05); }
+
+/* Language switch */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(201,162,39,0.35);
+  background: rgba(0,0,0,0.35);
+}
+.lang-btn {
+  color: rgba(245,240,230,0.55);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  padding: 0.15rem 0.25rem;
+}
+.lang-btn.active,
+.lang-btn:hover {
+  color: var(--gold-light);
+}
+.lang-sep {
+  color: rgba(201,162,39,0.45);
+  font-size: 0.7rem;
+}
+
+/* Share / thank-you card */
+.share-card-wrap {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.share-card-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.35rem;
+  color: var(--gold-light);
+  margin: 0 0 0.85rem;
+}
+.share-preview {
+  max-width: 320px;
+  margin: 0 auto 1rem;
+  aspect-ratio: 1080 / 1350;
+  border-radius: 14px;
+  border: 1px solid rgba(201,162,39,0.45);
+  background: linear-gradient(160deg, #0c0c0e 0%, #1a1610 55%, #0c0c0e 100%);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  overflow: hidden;
+}
+.share-preview-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.4rem 1rem;
+  border: 2px solid rgba(201,162,39,0.35);
+  margin: 10px;
+  border-radius: 10px;
+}
+.share-brand {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.35rem;
+  color: var(--gold-light);
+  font-weight: 700;
+}
+.share-amount {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #f5f0e6;
+  letter-spacing: 0.02em;
+}
+.share-status {
+  font-size: 0.85rem;
+  color: var(--gold);
+  border: 1px solid rgba(201,162,39,0.4);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  background: rgba(55,48,25,0.7);
+}
+.share-credit {
+  font-size: 0.78rem;
+  color: rgba(232,201,112,0.85);
+  margin-top: 0.4rem;
+}
+.share-url {
+  font-size: 0.7rem;
+  color: rgba(180,175,160,0.85);
+}
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}

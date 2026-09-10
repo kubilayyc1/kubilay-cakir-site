@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}Kayıt — {{ site.site_title }}{% endblock %}
+{% block title %}{{ t('reg_title') }} — {{ site.site_title }}{% endblock %}
 {% block content %}
 <section class="section fade-in auth-section">
   <div class="card glass auth-card">
-    <div class="panel-kicker">Hesap</div>
+    <div class="panel-kicker">{{ t('account_kicker') }}</div>
     {% if registration_closed %}
-      <h2>Kayıtlar Kapalı</h2>
-      <p class="sub">Şu an yeni hesap oluşturulamaz. Daha sonra tekrar deneyin.</p>
-      <a class="btn btn-outline btn-block" href="{{ url_for('login_page') }}">Giriş Sayfası</a>
+      <h2>{{ t('reg_closed') }}</h2>
+      <p class="sub">{{ t('reg_closed_sub') }}</p>
+      <a class="btn btn-outline btn-block" href="{{ url_for('login_page') }}">{{ t('reg_to_login') }}</a>
     {% else %}
-      <h2>Hesap Oluştur</h2>
-      <p class="sub">Birkaç saniyede kayıt olun — kart bilgisi istenmez</p>
+      <h2>{{ t('reg_title') }}</h2>
+      <p class="sub">{{ t('reg_sub') }}</p>
       <form id="register-form" novalidate>
         <div class="form-group">
-          <label for="name">Ad Soyad</label>
+          <label for="name">{{ t('reg_name') }}</label>
           <input id="name" name="name" type="text" required autocomplete="name" placeholder="Adınız" />
         </div>
         <div class="form-group">
-          <label for="email">E-posta</label>
+          <label for="email">{{ t('reg_email') }}</label>
           <input id="email" name="email" type="email" required autocomplete="email" placeholder="ornek@mail.com" />
         </div>
         <div class="form-group">
-          <label for="password">Şifre</label>
+          <label for="password">{{ t('reg_password') }}</label>
           <input id="password" name="password" type="password" required minlength="6" autocomplete="new-password" placeholder="En az 6 karakter" />
         </div>
-        <button class="btn btn-gold btn-block" type="submit" id="reg-btn">Kayıt Ol</button>
+        <button class="btn btn-gold btn-block" type="submit" id="reg-btn">{{ t('reg_btn') }}</button>
       </form>
       <div id="form-error" class="form-error" role="alert"></div>
-      <p class="auth-switch">Zaten hesabınız var mı? <a href="{{ url_for('login_page') }}">Giriş yapın</a></p>
+      <p class="auth-switch">{{ t('reg_switch') }} <a href="{{ url_for('login_page') }}">{{ t('reg_switch_link') }}</a></p>
     {% endif %}
   </div>
 </section>
@@ -55,15 +55,15 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
     });
     const data = await res.json();
     if (data.ok) {
-      KCToast && KCToast("Hesap oluşturuldu");
+      KCToast && KCToast({{ t('reg_ok')|tojson }});
       window.location.href = "/odeme";
       return;
     }
-    err.textContent = data.error || "Kayıt başarısız";
+    err.textContent = data.error || {{ t('reg_fail')|tojson }};
     err.classList.add("show");
-    KCToast && KCToast(data.error || "Kayıt başarısız", true);
+    KCToast && KCToast(data.error || {{ t('reg_fail')|tojson }}, true);
   } catch (_) {
-    err.textContent = "Bağlantı hatası";
+    err.textContent = {{ t('pay_conn')|tojson }};
     err.classList.add("show");
   } finally {
     btn.disabled = false;
