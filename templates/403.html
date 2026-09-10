@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Erişim Yok — {{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="section fade-in auth-section">
+  <div class="card glass auth-card result-card">
+    <div class="result-icon fail" aria-hidden="true">!</div>
+    <h2>Erişim Yok</h2>
+    <p class="sub">Bu sayfayı görüntüleme yetkiniz bulunmuyor.</p>
+    <div class="result-actions">
+      <a class="btn btn-gold" href="{{ url_for('index') }}">Ana Sayfa</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

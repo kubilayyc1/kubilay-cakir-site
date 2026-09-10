@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Bakım — {{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="section fade-in auth-section">
+  <div class="card glass auth-card result-card">
+    <div class="result-icon pending" aria-hidden="true">⏳</div>
+    <h2>Bakım Modu</h2>
+    <p class="sub">Site geçici olarak bakımda. Lütfen daha sonra tekrar deneyin.</p>
+    <div class="result-actions">
+      <a class="btn btn-outline" href="{{ url_for('login_page') }}">Yönetici Girişi</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

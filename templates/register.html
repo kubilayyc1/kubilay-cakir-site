@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Kayıt — {{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="section fade-in auth-section">
+  <div class="card glass auth-card">
+    <div class="panel-kicker">Hesap</div>
+    {% if registration_closed %}
+      <h2>Kayıtlar Kapalı</h2>
+      <p class="sub">Şu an yeni hesap oluşturulamaz. Daha sonra tekrar deneyin.</p>
+      <a class="btn btn-outline btn-block" href="{{ url_for('login_page') }}">Giriş Sayfası</a>
+    {% else %}
+      <h2>Hesap Oluştur</h2>
+      <p class="sub">Birkaç saniyede kayıt olun — kart bilgisi istenmez</p>
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label for="name">Ad Soyad</label>
+          <input id="name" name="name" type="text" required autocomplete="name" placeholder="Adınız" />
+        </div>
+        <div class="form-group">
+          <label for="email">E-posta</label>
+          <input id="email" name="email" type="email" required autocomplete="email" placeholder="ornek@mail.com" />
+        </div>
+        <div class="form-group">
+          <label for="password">Şifre</label>
+          <input id="password" name="password" type="password" required minlength="6" autocomplete="new-password" placeholder="En az 6 karakter" />
+        </div>
+        <button class="btn btn-gold btn-block" type="submit" id="reg-btn">Kayıt Ol</button>
+      </form>
+      <div id="form-error" class="form-error" role="alert"></div>
+      <p class="auth-switch">Zaten hesabınız var mı? <a href="{{ url_for('login_page') }}">Giriş yapın</a></p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if not registration_closed %}
+<script>
+document.getElementById("register-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const err = document.getElementById("form-error");
+  const btn = document.getElementById("reg-btn");
+  err.classList.remove("show");
+  btn.disabled = true;
+  btn.classList.add("is-loading");
+  try {
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      KCToast && KCToast("Hesap oluşturuldu");
+      window.location.href = "/odeme";
+      return;
+    }
+    err.textContent = data.error || "Kayıt başarısız";
+    err.classList.add("show");
+    KCToast && KCToast(data.error || "Kayıt başarısız", true);
+  } catch (_) {
+    err.textContent = "Bağlantı hatası";
+    err.classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("is-loading");
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

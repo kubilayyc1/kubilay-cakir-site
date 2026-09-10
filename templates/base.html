@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="description" content="{{ site.tagline or (site.site_title ~ ' — kişisel alan, havale ile güvenli ödeme') }}" />
+  <meta property="og:title" content="{% block og_title %}{{ site.site_title }}{% endblock %}" />
+  <meta property="og:description" content="{{ site.tagline or 'Kişisel alan · havale ile güvenli ödeme · Instagram' }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="tr_TR" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+  <title>{% block title %}{{ site.site_title }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <canvas id="bg-canvas" data-leaf="{{ url_for('static', filename='img/cannabis-leaf-clean.png') }}" aria-hidden="true"></canvas>
+  <div class="bg-vignette" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="nav-inner">
+      <a class="brand" href="{{ url_for('index') }}">
+        <span class="brand-mark" aria-hidden="true">K</span>
+        <span class="brand-text-wrap">
+          <span class="brand-text">{{ site.site_title }}</span>
+          <span class="brand-credit">Kurucu Yardımcısı · Kadir Karadeniz</span>
+        </span>
+      </a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menüyü aç" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav">
+        <a class="nav-link" href="{{ url_for('index') }}">Ana Sayfa</a>
+        {% if user %}
+          <a class="nav-link" href="{{ url_for('payment_page') }}">Ödeme</a>
+          {% if user.is_admin %}
+          <a class="nav-link" href="{{ url_for('admin_page') }}">Admin</a>
+          {% endif %}
+          <span class="nav-user" title="{{ user.email }}">{{ user.name }}</span>
+          <a class="nav-link nav-cta" href="{{ url_for('logout_redirect') }}">Çıkış</a>
+        {% else %}
+          <a class="nav-link" href="{{ url_for('login_page') }}">Giriş</a>
+          {% if site.registration_open %}
+          <a class="nav-link nav-cta" href="{{ url_for('register_page') }}">Kayıt</a>
+          {% endif %}
+        {% endif %}
+        <a class="nav-link nav-ig" href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">@{{ site.instagram_handle }}</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">{{ site.site_title }}</div>
+      <p class="footer-tag">{{ site.tagline }}</p>
+      <div class="footer-links">
+        <a href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>
+        {% if user %}
+        <a href="{{ url_for('payment_page') }}">Ödeme</a>
+        {% else %}
+        <a href="{{ url_for('login_page') }}">Giriş</a>
+        {% endif %}
+      </div>
+      <div class="footer-credit">
+        <span class="footer-credit-label">Kurucu Yardımcısı</span>
+        <span class="footer-credit-name">Kadir Karadeniz</span>
+      </div>
+      <p class="footer-note">Kart bilgisi toplanmaz · Havale / EFT bildirimi</p>
+    </div>
+  </footer>
+
+  <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
+  <script src="{{ url_for('static', filename='bg.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='ui.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

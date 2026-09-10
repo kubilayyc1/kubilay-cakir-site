@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="fill" x1="256" y1="30" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8BE06A"/>
+      <stop offset="35%" stop-color="#3CB043"/>
+      <stop offset="100%" stop-color="#145A32"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="256" y1="30" x2="256" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE9A8"/>
+      <stop offset="100%" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(256,255)">
+    <!-- CENTER leaflet: tall pointed with serrations -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="3" stroke-linejoin="round"
+      d="M0,145
+         L12,120 L4,115 L18,95 L6,90 L22,68 L8,62 L26,40 L10,35 L28,12 L8,8 L20,-18 L4,-22 L16,-48 L2,-52 L12,-78 L0,-205
+         L-12,-78 L-2,-52 L-16,-48 L-4,-22 L-20,-18 L-8,8 L-28,12 L-10,35 L-26,40 L-8,62 L-22,68 L-6,90 L-18,95 L-4,115 L-12,120
+         Z"/>
+    <!-- UPPER RIGHT (~28deg) -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="2.8" stroke-linejoin="round" transform="rotate(-28)"
+      d="M0,125
+         L14,105 L6,100 L20,82 L8,76 L24,56 L10,50 L26,30 L12,24 L28,4 L10,0 L22,-22 L6,-26 L18,-48 L4,-52 L14,-74 L0,-165
+         L-10,-70 L-2,-50 L-14,-46 L-4,-26 L-18,-20 L-6,0 L-22,6 L-8,26 L-20,34 L-6,52 L-18,60 L-4,78 L-12,86 L-2,104
+         Z"/>
+    <!-- UPPER LEFT -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="2.8" stroke-linejoin="round" transform="rotate(28)"
+      d="M0,125
+         L-14,105 L-6,100 L-20,82 L-8,76 L-24,56 L-10,50 L-26,30 L-12,24 L-28,4 L-10,0 L-22,-22 L-6,-26 L-18,-48 L-4,-52 L-14,-74 L0,-165
+         L10,-70 L2,-50 L14,-46 L4,-26 L18,-20 L6,0 L22,6 L8,26 L20,34 L6,52 L18,60 L4,78 L12,86 L2,104
+         Z"/>
+    <!-- MID RIGHT (~55deg) -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="2.6" stroke-linejoin="round" transform="rotate(-55)"
+      d="M0,110
+         L16,95 L8,90 L22,74 L10,68 L26,50 L12,44 L28,26 L14,20 L30,2 L12,-2 L24,-20 L8,-24 L20,-42 L6,-46 L16,-64 L0,-140
+         L-10,-58 L-2,-42 L-14,-36 L-4,-20 L-18,-14 L-6,0 L-22,8 L-8,24 L-20,34 L-6,48 L-18,58 L-4,74 L-12,84 L-2,98
+         Z"/>
+    <!-- MID LEFT -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="2.6" stroke-linejoin="round" transform="rotate(55)"
+      d="M0,110
+         L-16,95 L-8,90 L-22,74 L-10,68 L-26,50 L-12,44 L-28,26 L-14,20 L-30,2 L-12,-2 L-24,-20 L-8,-24 L-20,-42 L-6,-46 L-16,-64 L0,-140
+         L10,-58 L2,-42 L14,-36 L4,-20 L18,-14 L6,0 L22,8 L8,24 L20,34 L6,48 L18,58 L4,74 L12,84 L2,98
+         Z"/>
+    <!-- LOWER RIGHT (~82deg) -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="2.4" stroke-linejoin="round" transform="rotate(-82)"
+      d="M0,85
+         L14,74 L8,70 L20,58 L10,52 L22,38 L12,32 L24,18 L12,12 L24,0 L10,-4 L20,-16 L8,-20 L16,-32 L4,-36 L12,-50 L0,-105
+         L-8,-44 L-2,-32 L-12,-26 L-4,-14 L-16,-8 L-6,2 L-18,12 L-8,24 L-16,34 L-6,46 L-14,56 L-4,68 L-10,76 L-2,82
+         Z"/>
+    <!-- LOWER LEFT -->
+    <path fill="url(#fill)" stroke="url(#edge)" stroke-width="2.4" stroke-linejoin="round" transform="rotate(82)"
+      d="M0,85
+         L-14,74 L-8,70 L-20,58 L-10,52 L-22,38 L-12,32 L-24,18 L-12,12 L-24,0 L-10,-4 L-20,-16 L-8,-20 L-16,-32 L-4,-36 L-12,-50 L0,-105
+         L8,-44 L2,-32 L12,-26 L4,-14 L16,-8 L6,2 L18,12 L8,24 L16,34 L6,46 L14,56 L4,68 L10,76 L2,82
+         Z"/>
+    <!-- stem -->
+    <path d="M0,140 C-1,175 1,210 0,248" stroke="url(#edge)" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <!-- veins -->
+    <g stroke="#F0D78C" stroke-width="2" opacity="0.7" stroke-linecap="round" fill="none">
+      <path d="M0,130 L0,-195"/>
+      <path d="M0,110 C25,60 55,10 70,-145" transform="rotate(-28)"/>
+      <path d="M0,110 C25,60 55,10 70,-145" transform="rotate(28) scale(-1,1)"/>
+      <path d="M0,95 C30,55 60,15 95,-115" transform="rotate(-55)"/>
+      <path d="M0,95 C30,55 60,15 95,-115" transform="rotate(55) scale(-1,1)"/>
+      <path d="M0,75 C22,45 45,15 70,-80" transform="rotate(-82)"/>
+      <path d="M0,75 C22,45 45,15 70,-80" transform="rotate(82) scale(-1,1)"/>
+    </g>
+  </g>
+</svg>

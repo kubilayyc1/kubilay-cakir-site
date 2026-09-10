@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="hero fade-in">
+  <p class="hero-eyebrow">Kişisel · Güvenli · Zarif</p>
+  <h1>{{ site.site_title }}</h1>
+  <p class="tagline">{{ site.tagline }}</p>
+  <div class="divider"></div>
+  <div class="hero-actions">
+    {% if user %}
+      <a class="btn btn-gold" href="{{ url_for('payment_page') }}">Ödeme Ekranı</a>
+      {% if user.is_admin %}
+      <a class="btn btn-outline" href="{{ url_for('admin_page') }}">Yönetim</a>
+      {% endif %}
+    {% else %}
+      <a class="btn btn-gold" href="{{ url_for('login_page', next='/odeme') }}">Ödeme İçin Giriş Yap</a>
+      {% if site.registration_open %}
+      <a class="btn btn-outline" href="{{ url_for('register_page') }}">Hesap Oluştur</a>
+      {% endif %}
+    {% endif %}
+  </div>
+  <ul class="hero-pills" aria-label="Özellikler">
+    <li>Havale / EFT</li>
+    <li>Kart bilgisi yok</li>
+    <li>Yönetici onayı</li>
+  </ul>
+</section>
+
+<section class="section fade-in" id="instagram">
+  <h2 class="section-title">Instagram</h2>
+  <p class="section-sub">Beni Instagram’da takip edin</p>
+  <div class="card glass ig-card">
+    <div class="ig-left">
+      <div class="ig-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zM17.5 6.75a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/></svg>
+      </div>
+      <div>
+        <div class="ig-label">Instagram</div>
+        <div class="ig-handle"><a href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">@{{ site.instagram_handle }}</a></div>
+      </div>
+    </div>
+    <a class="btn btn-outline" href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">Profili Aç</a>
+  </div>
+</section>
+
+{% if not user %}
+<p class="lock-note">Ödeme ekranı için giriş yapmanız gerekir.{% if site.registration_open %} Hesabınız yoksa birkaç saniyede kayıt olabilirsiniz.{% endif %}</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Admin — {{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="section fade-in">
+  <h2 class="section-title">Yönetim Paneli</h2>
+  <p class="section-sub">Üyeler · havale bildirimleri · site ayarları</p>
+
+  <div class="stats-grid stats-grid-6">
+    <div class="stat-card card glass"><div class="stat-label">Kullanıcı</div><div class="stat-value">{{ stats.total }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Üye</div><div class="stat-value">{{ stats.members }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Engelli</div><div class="stat-value">{{ stats.blocked }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Ödeme</div><div class="stat-value">{{ stats.payments }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Bekleyen</div><div class="stat-value accent-warn">{{ stats.payments_pending }}</div></div>
+    <div class="stat-card card glass"><div class="stat-label">Onaylı</div><div class="stat-value accent-ok">{{ stats.payments_approved }}</div></div>
+  </div>
+
+  <div class="admin-tabs" role="tablist">
+    <button type="button" class="admin-tab active" data-tab="dash">Özet</button>
+    <button type="button" class="admin-tab" data-tab="users">Üyeler</button>
+    <button type="button" class="admin-tab" data-tab="payments">Ödemeler</button>
+    <button type="button" class="admin-tab" data-tab="settings">Ayarlar</button>
+  </div>
+
+  <div class="admin-panel active" id="tab-dash">
+    <div class="card glass admin-table-card" style="margin-bottom:1.25rem;">
+      <h2>Ödeme Altyapısı</h2>
+      <p class="sub">
+        <span class="badge badge-ok">Anahtarsız · Havale / EFT</span>
+        · Kart verisi toplanmaz
+      </p>
+      <div class="bank-box" style="margin-top:1rem;">
+        <div class="bank-row"><span class="k">Alıcı</span><span class="v">{{ bank.recipient }}</span></div>
+        <div class="bank-row"><span class="k">Banka</span><span class="v">{{ bank.bank_name }}</span></div>
+        <div class="bank-row"><span class="k">IBAN</span><span class="v mono">{{ bank.iban }}</span></div>
+      </div>
+    </div>
+    <div class="card glass admin-table-card">
+      <h2>Son Kayıtlar</h2>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>Ad</th><th>E-posta</th><th>Kayıt</th></tr></thead>
+          <tbody>
+            {% for u in recent_signups %}
+            <tr><td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.created_at }}</td></tr>
+            {% else %}
+            <tr><td colspan="4" class="empty-row">Henüz kayıt yok</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="tab-users">
+    <div class="card glass admin-table-card">
+      <h2>Üyeler</h2>
+      <form class="admin-filters" method="get" action="{{ url_for('admin_page') }}">
+        <input type="hidden" name="tab" value="users" />
+        <input type="search" name="q" value="{{ q }}" placeholder="Ad veya e-posta ara…" />
+        <select name="role">
+          <option value="all" {% if filter_role=='all' %}selected{% endif %}>Tüm roller</option>
+          <option value="admin" {% if filter_role=='admin' %}selected{% endif %}>Yöneticiler</option>
+          <option value="member" {% if filter_role=='member' %}selected{% endif %}>Üyeler</option>
+        </select>
+        <select name="blocked">
+          <option value="all" {% if filter_block=='all' %}selected{% endif %}>Engelleme: hepsi</option>
+          <option value="no" {% if filter_block=='no' %}selected{% endif %}>Aktif</option>
+          <option value="yes" {% if filter_block=='yes' %}selected{% endif %}>Engelli</option>
+        </select>
+        <button class="btn btn-outline" type="submit">Filtrele</button>
+      </form>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>ID</th><th>Ad</th><th>E-posta</th><th>Kayıt</th><th>Durum</th><th>İşlemler</th></tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr data-user-id="{{ u.id }}">
+              <td>{{ u.id }}</td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.created_at }}</td>
+              <td>
+                {% if u.is_admin %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge badge-user">Üye</span>{% endif %}
+                {% if u.is_blocked %}<span class="badge badge-bad">Engelli</span>{% endif %}
+              </td>
+              <td class="actions-cell">
+                {% if u.id != user.id %}
+                  <button type="button" class="mini-btn" data-act="toggle-block" data-blocked="{{ 1 if u.is_blocked else 0 }}">
+                    {% if u.is_blocked %}Engeli Kaldır{% else %}Engelle{% endif %}
+                  </button>
+                  <button type="button" class="mini-btn" data-act="toggle-admin" data-admin="{{ 1 if u.is_admin else 0 }}">
+                    {% if u.is_admin %}Yetkiyi Al{% else %}Admin Yap{% endif %}
+                  </button>
+                  <button type="button" class="mini-btn mini-danger" data-act="delete">Sil</button>
+                {% else %}
+                  <span class="muted-tiny">Siz</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="empty-row">Sonuç yok</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="tab-payments">
+    <div class="card glass admin-table-card">
+      <h2>Ödeme Bildirimleri</h2>
+      <p class="sub">Kart numarası / CVV saklanmaz · son 100 kayıt · onay / red / bekleyen</p>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Kullanıcı</th><th>Tutar</th><th>Durum</th><th>Not</th><th>Admin Notu</th><th>Zaman</th><th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+            <tr data-payment-id="{{ p.id }}">
+              <td>{{ p.id }}</td>
+              <td>{{ p.user_email or '—' }}</td>
+              <td>₺{{ '%.2f'|format(p.amount) }}</td>
+              <td class="status-cell">
+                {% set st = p.status %}
+                {% if st in ('approved','success') %}<span class="badge badge-ok">{{ st }}</span>
+                {% elif st in ('rejected','failure','error') %}<span class="badge badge-bad">{{ st }}</span>
+                {% else %}<span class="badge badge-pending">{{ st }}</span>{% endif %}
+              </td>
+              <td class="note-cell">{{ p.note or '—' }}</td>
+              <td>
+                <div class="note-edit">
+                  <input type="text" class="admin-note-input" value="{{ p.admin_note or '' }}" placeholder="Not…" />
+                  <button type="button" class="mini-btn" data-act="save-note">Kaydet</button>
+                </div>
+              </td>
+              <td>{{ p.created_at }}</td>
+              <td class="actions-cell pay-actions">
+                <button type="button" class="mini-btn mini-ok" data-act="set-status" data-status="approved">Onayla</button>
+                <button type="button" class="mini-btn mini-warn" data-act="set-status" data-status="pending">Beklet</button>
+                <button type="button" class="mini-btn mini-danger" data-act="set-status" data-status="rejected">Reddet</button>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="empty-row">Henüz ödeme bildirimi yok</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="tab-settings">
+    <div class="card glass pay-panel">
+      <h2>Site Ayarları</h2>
+      <p class="sub">Başlık, Instagram, kayıt, bakım ve banka bilgileri</p>
+      <form id="settings-form">
+        <div class="form-group">
+          <label for="site_title">Site Başlığı</label>
+          <input id="site_title" name="site_title" type="text" value="{{ settings.site_title }}" required />
+        </div>
+        <div class="form-group">
+          <label for="tagline">Slogan</label>
+          <input id="tagline" name="tagline" type="text" value="{{ settings.tagline }}" />
+        </div>
+        <div class="form-group">
+          <label for="instagram_handle">Instagram Kullanıcı Adı</label>
+          <input id="instagram_handle" name="instagram_handle" type="text" value="{{ settings.instagram_handle }}" />
+        </div>
+        <div class="form-group">
+          <label for="bank_recipient">Alıcı Adı</label>
+          <input id="bank_recipient" name="bank_recipient" type="text" value="{{ settings.bank_recipient }}" required />
+        </div>
+        <div class="form-group">
+          <label for="bank_name">Banka</label>
+          <input id="bank_name" name="bank_name" type="text" value="{{ settings.bank_name }}" />
+        </div>
+        <div class="form-group">
+          <label for="bank_iban">IBAN</label>
+          <input id="bank_iban" name="bank_iban" type="text" value="{{ settings.bank_iban }}" class="mono" required />
+        </div>
+        <div class="form-group check-row">
+          <label><input type="checkbox" id="registration_open" {% if settings.registration_open == '1' %}checked{% endif %} /> Kayıtlar açık</label>
+        </div>
+        <div class="form-group check-row">
+          <label><input type="checkbox" id="maintenance_mode" {% if settings.maintenance_mode == '1' %}checked{% endif %} /> Bakım modu</label>
+        </div>
+        <button class="btn btn-gold" type="submit">Ayarları Kaydet</button>
+      </form>
+      <div id="settings-msg" class="form-success"></div>
+      <div id="settings-err" class="form-error"></div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const tabs = document.querySelectorAll(".admin-tab");
+  const panels = document.querySelectorAll(".admin-panel");
+  function showTab(name) {
+    tabs.forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+    panels.forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
+    try { history.replaceState(null, "", "?tab=" + name); } catch (_) {}
+  }
+  tabs.forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+  const params = new URLSearchParams(location.search);
+  const initial = params.get("tab") || "dash";
+  if (["dash","users","payments","settings"].includes(initial)) showTab(initial);
+  if (params.get("q") || params.get("role") || params.get("blocked")) showTab("users");
+
+  async function api(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body || {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "İşlem başarısız");
+    return data;
+  }
+
+  function badgeHtml(status) {
+    const s = (status || "").toLowerCase();
+    let cls = "badge-pending";
+    if (s === "approved" || s === "success") cls = "badge-ok";
+    else if (s === "rejected" || s === "failure" || s === "error") cls = "badge-bad";
+    return '<span class="badge ' + cls + '">' + status + "</span>";
+  }
+
+  document.querySelectorAll("#tab-users [data-act]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const tr = btn.closest("tr");
+      const id = tr.dataset.userId;
+      const act = btn.dataset.act;
+      try {
+        if (act === "toggle-block") {
+          const blocked = btn.dataset.blocked !== "1";
+          await api("/api/admin/users/" + id + "/block", { blocked });
+          KCToast(blocked ? "Kullanıcı engellendi" : "Engel kaldırıldı");
+        } else if (act === "toggle-admin") {
+          const is_admin = btn.dataset.admin !== "1";
+          await api("/api/admin/users/" + id + "/admin", { is_admin });
+          KCToast(is_admin ? "Yönetici yapıldı" : "Yetki alındı");
+        } else if (act === "delete") {
+          if (!confirm("Bu kullanıcı silinsin mi?")) return;
+          await api("/api/admin/users/" + id + "/delete", {});
+          KCToast("Kullanıcı silindi");
+        }
+        location.reload();
+      } catch (e) {
+        KCToast(e.message || "Hata", true);
+      }
+    });
+  });
+
+  document.querySelectorAll("#tab-payments [data-act]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const tr = btn.closest("tr");
+      const id = tr.dataset.paymentId;
+      const act = btn.dataset.act;
+      try {
+        if (act === "save-note") {
+          const note = tr.querySelector(".admin-note-input").value;
+          await api("/api/admin/payments/" + id + "/note", { admin_note: note });
+          KCToast("Not kaydedildi");
+        } else if (act === "set-status") {
+          const status = btn.dataset.status;
+          await api("/api/admin/payments/" + id + "/status", { status });
+          const cell = tr.querySelector(".status-cell");
+          if (cell) cell.innerHTML = badgeHtml(status);
+          KCToast(
+            status === "approved" ? "Ödeme onaylandı" :
+            status === "rejected" ? "Ödeme reddedildi" : "Beklemeye alındı"
+          );
+        }
+      } catch (e) {
+        KCToast(e.message || "Hata", true);
+      }
+    });
+  });
+
+  document.getElementById("settings-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("settings-msg");
+    const err = document.getElementById("settings-err");
+    msg.classList.remove("show");
+    err.classList.remove("show");
+    try {
+      await api("/api/admin/settings", {
+        site_title: document.getElementById("site_title").value,
+        tagline: document.getElementById("tagline").value,
+        instagram_handle: document.getElementById("instagram_handle").value,
+        bank_recipient: document.getElementById("bank_recipient").value,
+        bank_name: document.getElementById("bank_name").value,
+        bank_iban: document.getElementById("bank_iban").value,
+        registration_open: document.getElementById("registration_open").checked,
+        maintenance_mode: document.getElementById("maintenance_mode").checked,
+      });
+      msg.textContent = "Ayarlar kaydedildi";
+      msg.classList.add("show");
+      KCToast("Ayarlar kaydedildi");
+      setTimeout(() => location.reload(), 600);
+    } catch (ex) {
+      err.textContent = ex.message || "Kaydedilemedi";
+      err.classList.add("show");
+      KCToast(ex.message || "Kaydedilemedi", true);
+    }
+  });
+})();
+</script>
+{% endblock %}

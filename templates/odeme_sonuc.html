@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Ödeme Sonucu — {{ site.site_title }}{% endblock %}
+{% block content %}
+<section class="section fade-in">
+  <h2 class="section-title">Ödeme Sonucu</h2>
+  <div class="card glass pay-panel result-card">
+    {% if result.status == 'approved' or result.ok %}
+      <div class="result-icon ok" aria-hidden="true">✓</div>
+      <h2>Onaylandı</h2>
+    {% elif result.status == 'pending' %}
+      <div class="result-icon pending" aria-hidden="true">⏳</div>
+      <h2>Bildirim Alındı</h2>
+    {% else %}
+      <div class="result-icon fail" aria-hidden="true">!</div>
+      <h2>Reddedildi</h2>
+    {% endif %}
+    <p class="sub">{{ result.message }}</p>
+    {% if result.error_message %}
+      <p class="form-error show" style="position:static;margin-top:0.75rem;">{{ result.error_message }}</p>
+    {% endif %}
+    <div class="bank-box" style="margin-top:1.25rem;">
+      {% if result.amount %}
+      <div class="bank-row"><span class="k">Tutar</span><span class="v">₺{{ '%.2f'|format(result.amount) }}</span></div>
+      {% endif %}
+      {% if result.note %}
+      <div class="bank-row"><span class="k">Not</span><span class="v">{{ result.note }}</span></div>
+      {% endif %}
+      {% if result.payment_id %}
+      <div class="bank-row"><span class="k">Kayıt No</span><span class="v">#{{ result.payment_id }}</span></div>
+      {% endif %}
+      {% if result.conversation_id %}
+      <div class="bank-row"><span class="k">Referans</span><span class="v mono">{{ result.conversation_id }}</span></div>
+      {% endif %}
+      <div class="bank-row">
+        <span class="k">Durum</span>
+        <span class="v">
+          {% if result.status == 'approved' %}<span class="badge badge-ok">onaylandı</span>
+          {% elif result.status == 'rejected' %}<span class="badge badge-bad">reddedildi</span>
+          {% else %}<span class="badge badge-pending">beklemede</span>{% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="result-actions">
+      <a class="btn btn-gold" href="{{ url_for('payment_page') }}">Yeni Bildirim</a>
+      <a class="btn btn-outline" href="{{ url_for('index') }}">Ana Sayfa</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
