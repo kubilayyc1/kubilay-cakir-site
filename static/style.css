@@ -664,3 +664,279 @@ textarea { min-height: 96px; resize: vertical; }
   gap: 0.6rem;
   justify-content: center;
 }
+
+/* —— VIP pill —— */
+.vip-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.48rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #1a1408;
+  background: linear-gradient(135deg, #f0e0a0, #c9a227 45%, #8a7020);
+  border: 1px solid rgba(232, 212, 139, 0.55);
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.35);
+  vertical-align: middle;
+}
+.vip-pill-lg {
+  margin: 0.35rem 0 0.65rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+}
+.nav-user .vip-pill { margin-left: 0.4rem; }
+
+.result-card-vip {
+  border-color: rgba(201, 162, 39, 0.45);
+  box-shadow: 0 0 40px rgba(201, 162, 39, 0.12), var(--shadow);
+}
+.vip-thanks { text-align: center; margin-top: 0.35rem; }
+.vip-unlocked {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  color: var(--gold-light);
+  font-weight: 600;
+  margin: 0.25rem 0 0.4rem;
+}
+.vip-note { color: var(--muted); font-size: 0.88rem; margin-top: 0.35rem; }
+
+.vip-celebrate {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  z-index: 2;
+}
+.result-card { position: relative; }
+.vip-celebrate.play::before,
+.vip-celebrate.play::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow:
+    -40px 20px 0 0 rgba(201,162,39,0.55),
+    45px 30px 0 0 rgba(232,212,139,0.45),
+    -20px 60px 0 0 rgba(201,162,39,0.4),
+    30px 70px 0 0 rgba(232,212,139,0.35),
+    0 90px 0 0 rgba(201,162,39,0.3),
+    -55px 50px 0 0 rgba(232,212,139,0.25);
+  animation: vipSoftRise 2.2s ease-out forwards;
+  opacity: 0;
+}
+.vip-celebrate.play::after {
+  left: 42%;
+  top: 28%;
+  animation-delay: 0.15s;
+  box-shadow:
+    50px 10px 0 0 rgba(232,212,139,0.5),
+    -35px 40px 0 0 rgba(201,162,39,0.4),
+    20px 55px 0 0 rgba(232,212,139,0.35);
+}
+@keyframes vipSoftRise {
+  0% { transform: translate(-50%, 30px) scale(0.6); opacity: 0; }
+  25% { opacity: 0.85; }
+  100% { transform: translate(-50%, -40px) scale(1.1); opacity: 0; }
+}
+
+/* —— Kadir card page —— */
+.kadir-section {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.5rem;
+}
+.kadir-card {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 2.4rem 1.8rem 2rem;
+  text-align: center;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201,162,39,0.14), transparent 55%),
+    rgba(10, 10, 10, 0.82);
+  overflow: hidden;
+}
+.kadir-ornament {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  border-radius: calc(var(--radius) - 6px);
+  pointer-events: none;
+}
+.kadir-avatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0.4rem auto 1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1a1408;
+  background: linear-gradient(145deg, #f0e0a0, #c9a227 50%, #8a7020);
+  box-shadow: 0 0 28px rgba(201, 162, 39, 0.35);
+  letter-spacing: 0.04em;
+}
+.kadir-role {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+.kadir-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.35rem);
+  color: var(--gold-light);
+  font-weight: 600;
+  margin: 0.35rem 0 0.75rem;
+}
+.kadir-divider {
+  width: 4.5rem;
+  height: 2px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.kadir-bio {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 1.35rem;
+}
+.kadir-wa { width: 100%; margin-bottom: 0.55rem; }
+.kadir-phone {
+  color: var(--gold-light);
+  font-size: 0.9rem;
+  margin-bottom: 1.1rem;
+  letter-spacing: 0.04em;
+}
+.kadir-back { width: 100%; }
+
+.footer-credit {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .2s, box-shadow .2s;
+}
+.footer-credit:hover {
+  border-color: rgba(201, 162, 39, 0.45);
+  box-shadow: 0 0 24px rgba(201, 162, 39, 0.12);
+}
+.hero-credit-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(232, 212, 139, 0.35);
+  transition: border-color .2s, color .2s;
+}
+.hero-credit-link:hover {
+  color: #fff;
+  border-bottom-color: var(--gold-light);
+}
+
+/* —— Welcome splash —— */
+.welcome-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: #050505;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
+}
+.welcome-splash.is-hiding {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+#splash-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.splash-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+}
+.splash-mark {
+  width: 3.4rem;
+  height: 3.4rem;
+  margin: 0 auto 1.1rem;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1408;
+  background: linear-gradient(135deg, #d4af37, #8a7020);
+  box-shadow: 0 0 40px rgba(201, 162, 39, 0.35);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: splashIn 1.1s ease forwards 0.15s;
+}
+.splash-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--gold-light);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: splashIn 1.2s ease forwards 0.4s;
+}
+.splash-line {
+  width: 0;
+  height: 1px;
+  margin: 1.15rem auto 0;
+  background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  animation: splashLine 1.4s ease forwards 0.7s;
+}
+.splash-skip {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 2;
+  background: transparent;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  color: var(--muted);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.splash-skip:hover { color: var(--gold-light); border-color: var(--border); }
+@keyframes splashIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes splashLine {
+  to { width: 7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-mark,
+  .splash-name,
+  .splash-line {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    width: 7rem;
+  }
+  .welcome-splash { transition-duration: 0.2s; }
+  .vip-celebrate.play::before,
+  .vip-celebrate.play::after { animation: none !important; display: none; }
+}

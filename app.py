@@ -137,7 +137,7 @@ I18N = {
         "result_pending": "Bildirim Alındı",
         "result_rejected": "Reddedildi",
         "result_msg_pending": "Ödeme bildiriminiz alındı. Yönetici onayından sonra tamamlanır.",
-        "result_msg_approved": "Ödemeniz onaylandı. Teşekkürler!",
+        "result_msg_approved": "Ödemeniz onaylandı. Teşekkürler — VIP rozetiniz açıldı.",
         "result_msg_rejected": "Ödeme bildiriminiz reddedildi. Gerekirse tekrar deneyin.",
         "result_msg_other": "Ödeme kaydı güncellendi.",
         "result_amount": "Tutar",
@@ -182,6 +182,18 @@ I18N = {
         "reg_switch_link": "Giriş yapın",
         "reg_ok": "Hesap oluşturuldu",
         "reg_fail": "Kayıt başarısız",
+        "result_thanks_title": "Teşekkürler",
+        "result_thanks_sub": "Ödemeniz onaylandı. Aramıza katıldığınız için teşekkür ederiz.",
+        "result_vip_unlocked": "VIP rozetiniz açıldı",
+        "result_vip_note": "Profilinizde altın VIP rozeti artık görünür.",
+        "vip_badge": "VIP",
+        "kadir_title": "Kadir Karadeniz",
+        "kadir_role": "Kurucu Yardımcısı",
+        "kadir_bio": "Kubilay Çakır ekosisteminin kurucu yardımcısı. Ödeme onayları, misafir ilişkileri ve WhatsApp üzerinden kişisel destek.",
+        "kadir_cta": "WhatsApp ile Yaz",
+        "kadir_back": "Ana Sayfaya Dön",
+        "splash_name": "Kubilay Çakır",
+        "splash_skip": "Geç",
         "account_kicker": "Hesap",
     },
     "en": {
@@ -248,7 +260,7 @@ I18N = {
         "result_pending": "Notification Received",
         "result_rejected": "Rejected",
         "result_msg_pending": "Your payment notification was received. It will complete after admin approval.",
-        "result_msg_approved": "Your payment was approved. Thank you!",
+        "result_msg_approved": "Your payment was approved. Thank you — VIP badge unlocked.",
         "result_msg_rejected": "Your payment notification was rejected. Please try again if needed.",
         "result_msg_other": "Payment record updated.",
         "result_amount": "Amount",
@@ -293,6 +305,18 @@ I18N = {
         "reg_switch_link": "Log in",
         "reg_ok": "Account created",
         "reg_fail": "Registration failed",
+        "result_thanks_title": "Thank You",
+        "result_thanks_sub": "Your payment was approved. Thank you for joining us.",
+        "result_vip_unlocked": "VIP badge unlocked",
+        "result_vip_note": "A gold VIP badge now appears on your profile.",
+        "vip_badge": "VIP",
+        "kadir_title": "Kadir Karadeniz",
+        "kadir_role": "Co-founder",
+        "kadir_bio": "Co-founder of the Kubilay Çakır ecosystem. Payment approvals, guest relations, and personal support via WhatsApp.",
+        "kadir_cta": "Message on WhatsApp",
+        "kadir_back": "Back to Home",
+        "splash_name": "Kubilay Çakır",
+        "splash_skip": "Skip",
         "account_kicker": "Account",
     },
 }
@@ -355,6 +379,7 @@ def init_db():
     ensure_column(db, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
     ensure_column(db, "users", "is_blocked", "is_blocked INTEGER NOT NULL DEFAULT 0")
     ensure_column(db, "users", "is_helper", "is_helper INTEGER NOT NULL DEFAULT 0")
+    ensure_column(db, "users", "is_vip", "is_vip INTEGER NOT NULL DEFAULT 0")
 
     db.execute(
         """
@@ -595,7 +620,7 @@ def current_user():
         return None
     row = get_db().execute(
         """
-        SELECT id, name, email, is_admin, is_helper, is_blocked, created_at
+        SELECT id, name, email, is_admin, is_helper, is_vip, is_blocked, created_at
         FROM users WHERE id = ?
         """,
         (uid,),
@@ -608,6 +633,7 @@ def current_user():
     user = dict(row)
     user["is_admin"] = bool(user.get("is_admin"))
     user["is_helper"] = bool(user.get("is_helper"))
+    user["is_vip"] = bool(user.get("is_vip"))
     user["is_blocked"] = bool(user.get("is_blocked"))
     return user
 
@@ -821,6 +847,12 @@ def register_page():
     return render_template("register.html", user=None, registration_closed=False)
 
 
+
+@app.route("/kadir")
+def kadir_page():
+    return render_template("kadir.html", user=current_user())
+
+
 @app.route("/odeme")
 @login_required_page
 def payment_page():
@@ -842,8 +874,9 @@ def payment_result(payment_id):
         abort(404)
     if row["user_id"] != user["id"] and not user.get("is_admin"):
         abort(403)
+    is_approved = row["status"] == "approved"
     result = {
-        "ok": row["status"] == "approved",
+        "ok": is_approved,
         "status": row["status"],
         "message": {
             "pending": t("result_msg_pending"),
@@ -864,6 +897,13 @@ def payment_result(payment_id):
             "payment_card_png", payment_id=row["id"], _external=True
         ),
         "card_png_url": url_for("payment_card_png", payment_id=row["id"]),
+        "is_vip": bool(user.get("is_vip")) or is_approved,
+        "show_thanks": is_approved,
+        "celebrate": is_approved,
+        "thanks_title": t("result_thanks_title"),
+        "thanks_sub": t("result_thanks_sub"),
+        "vip_unlocked": t("result_vip_unlocked"),
+        "vip_note": t("result_vip_note"),
     }
     result["whatsapp_url"] = whatsapp_payment_url(
         {"name": user.get("name"), "email": row["user_email"]},
@@ -1211,7 +1251,7 @@ def api_login():
 
     row = get_db().execute(
         """
-        SELECT id, name, email, password_hash, is_admin, is_helper, is_blocked
+        SELECT id, name, email, password_hash, is_admin, is_helper, is_vip, is_blocked
         FROM users WHERE email = ?
         """,
         (email,),
@@ -1233,6 +1273,7 @@ def api_login():
                 "email": row["email"],
                 "is_admin": bool(row["is_admin"]),
                 "is_helper": bool(row["is_helper"]),
+                "is_vip": bool(row["is_vip"] if "is_vip" in row.keys() else 0),
             },
         }
     )
@@ -1436,7 +1477,7 @@ def admin_payment_status(admin, payment_id):
         ), 400
     db = get_db()
     row = db.execute(
-        "SELECT id FROM payments WHERE id = ?", (payment_id,)
+        "SELECT id, user_id FROM payments WHERE id = ?", (payment_id,)
     ).fetchone()
     if not row:
         return jsonify({"ok": False, "error": "Ödeme kaydı yok"}), 404
@@ -1447,9 +1488,22 @@ def admin_payment_status(admin, payment_id):
         """,
         (status, payment_id),
     )
+    vip_granted = False
+    if status == "approved" and row["user_id"]:
+        db.execute(
+            "UPDATE users SET is_vip = 1 WHERE id = ?",
+            (row["user_id"],),
+        )
+        vip_granted = True
     db.commit()
-    log.info("payment_status id=%s status=%s by=%s", payment_id, status, admin["id"])
-    return jsonify({"ok": True, "status": status})
+    log.info(
+        "payment_status id=%s status=%s by=%s vip=%s",
+        payment_id,
+        status,
+        admin["id"],
+        vip_granted,
+    )
+    return jsonify({"ok": True, "status": status, "vip_granted": vip_granted})
 
 
 @app.route("/api/admin/settings", methods=["POST"])

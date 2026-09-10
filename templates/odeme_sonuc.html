@@ -3,18 +3,30 @@
 {% block content %}
 <section class="section fade-in">
   <h2 class="section-title">{{ t('result_title') }}</h2>
-  <div class="card glass pay-panel result-card">
+  <div class="card glass pay-panel result-card{% if result.show_thanks %} result-card-vip{% endif %}">
     {% if result.status == 'approved' or result.ok %}
       <div class="result-icon ok" aria-hidden="true">✓</div>
-      <h2>{{ t('result_approved') }}</h2>
+      <h2>{{ result.thanks_title or t('result_approved') }}</h2>
+      {% if result.show_thanks %}
+      <div class="vip-thanks" data-celebrate="{{ '1' if result.celebrate else '0' }}" data-payment-id="{{ result.payment_id }}">
+        <span class="vip-pill vip-pill-lg">{{ t('vip_badge') }}</span>
+        <p class="vip-unlocked">{{ result.vip_unlocked }}</p>
+        <p class="sub">{{ result.thanks_sub }}</p>
+        <p class="vip-note">{{ result.vip_note }}</p>
+      </div>
+      <div class="vip-celebrate" id="vip-celebrate" hidden aria-hidden="true"></div>
+      {% else %}
+      <p class="sub">{{ result.message }}</p>
+      {% endif %}
     {% elif result.status == 'pending' %}
       <div class="result-icon pending" aria-hidden="true">⏳</div>
       <h2>{{ t('result_pending') }}</h2>
+      <p class="sub">{{ result.message }}</p>
     {% else %}
       <div class="result-icon fail" aria-hidden="true">!</div>
       <h2>{{ t('result_rejected') }}</h2>
+      <p class="sub">{{ result.message }}</p>
     {% endif %}
-    <p class="sub">{{ result.message }}</p>
     {% if result.error_message %}
       <p class="form-error show" style="position:static;margin-top:0.75rem;">{{ result.error_message }}</p>
     {% endif %}
@@ -111,6 +123,25 @@
       window.KCToast && KCToast(copiedMsg);
     }
   });
+
+  const thanks = document.querySelector(".vip-thanks");
+  if (thanks && thanks.dataset.celebrate === "1") {
+    const key = "kc_vip_celebrate_" + (thanks.dataset.paymentId || "");
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, "1");
+      const layer = document.getElementById("vip-celebrate");
+      if (layer && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        layer.hidden = false;
+        layer.setAttribute("aria-hidden", "false");
+        layer.classList.add("play");
+        setTimeout(() => {
+          layer.classList.remove("play");
+          layer.hidden = true;
+          layer.setAttribute("aria-hidden", "true");
+        }, 2400);
+      }
+    }
+  }
 })();
 </script>
 {% endif %}

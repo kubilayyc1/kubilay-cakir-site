@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ t('kadir_title') }} — {{ site.site_title }}{% endblock %}
+{% block og_title %}{{ t('kadir_title') }} · {{ t('kadir_role') }}{% endblock %}
+{% block content %}
+<section class="section fade-in kadir-section">
+  <div class="kadir-card glass">
+    <div class="kadir-ornament" aria-hidden="true"></div>
+    <div class="kadir-avatar" aria-hidden="true">KK</div>
+    <p class="kadir-role">{{ t('kadir_role') }}</p>
+    <h1 class="kadir-name">{{ t('kadir_title') }}</h1>
+    <div class="kadir-divider" aria-hidden="true"></div>
+    <p class="kadir-bio">{{ t('kadir_bio') }}</p>
+    <a class="btn btn-wa kadir-wa" href="{{ site.whatsapp.url }}?text={{ t('wa_hello')|urlencode }}" target="_blank" rel="noopener noreferrer">
+      {{ t('kadir_cta') }}
+    </a>
+    <p class="kadir-phone">{{ site.whatsapp.display }}</p>
+    <a class="btn btn-outline kadir-back" href="{{ url_for('index') }}">{{ t('kadir_back') }}</a>
+  </div>
+</section>
+{% endblock %}

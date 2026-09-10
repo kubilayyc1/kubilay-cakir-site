@@ -43,7 +43,7 @@
           {% elif user.is_helper %}
           <a class="nav-link" href="{{ url_for('admin_payments_page') }}">{{ t('nav_helper') }}</a>
           {% endif %}
-          <span class="nav-user" title="{{ user.email }}">{{ user.name }}</span>
+          <span class="nav-user" title="{{ user.email }}">{{ user.name }}{% if user.is_vip %} <span class="vip-pill" title="VIP">{{ t('vip_badge') }}</span>{% endif %}</span>
           <a class="nav-link nav-cta" href="{{ url_for('logout_redirect') }}">{{ t('nav_logout') }}</a>
         {% else %}
           <a class="nav-link" href="{{ url_for('login_page') }}">{{ t('nav_login') }}</a>
@@ -78,10 +78,10 @@
         <a href="{{ url_for('login_page') }}">{{ t('footer_login') }}</a>
         {% endif %}
       </div>
-      <div class="footer-credit">
+      <a class="footer-credit" href="{{ url_for('kadir_page') }}">
         <span class="footer-credit-label">{{ t('footer_credit_label') }}</span>
         <span class="footer-credit-name">{{ t('footer_credit_name') }}</span>
-      </div>
+      </a>
       <p class="footer-note">{{ t('footer_note') }}</p>
     </div>
   </footer>
@@ -93,9 +93,20 @@
     <span class="wa-fab-text">{{ t('wa_fab_text') }}<br><small>{{ t('wa_fab_sub') }}</small></span>
   </a>
 
+  <div id="welcome-splash" class="welcome-splash" hidden aria-hidden="true">
+    <canvas id="splash-canvas" aria-hidden="true"></canvas>
+    <div class="splash-inner">
+      <div class="splash-mark" aria-hidden="true">K</div>
+      <p class="splash-name">{{ t('splash_name') }}</p>
+      <div class="splash-line" aria-hidden="true"></div>
+    </div>
+    <button type="button" class="splash-skip" id="splash-skip">{{ t('splash_skip') }}</button>
+  </div>
+
   <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
   <script src="{{ url_for('static', filename='bg.js') }}" defer></script>
   <script src="{{ url_for('static', filename='ui.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='splash.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
