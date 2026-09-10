@@ -13,6 +13,4 @@ services:
       - key: ADMIN_EMAIL
         value: kubilaycakir54@yahoo.com
       - key: ADMIN_PASSWORD
-        sync: false
-      - key: DATA_DIR
-        value: /var/data
+        value: Kubilay8181
