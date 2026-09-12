@@ -46,6 +46,15 @@
   </div>
 </section>
 
+
+<section class="section fade-in" id="ilan-teaser">
+  <a class="ilan-home-card glass" href="{{ url_for('ilan_karpuz') }}">
+    <span class="ilan-home-label">{{ t('ilan_home_teaser') }}</span>
+    <span class="ilan-home-title">{{ t('ilan_karpuz_title') }}</span>
+    <span class="ilan-home-hint">{{ t('ilan_home_hint') }}</span>
+  </a>
+</section>
+
 {% if not user %}
 <p class="lock-note">{{ t('lock_note') }}{% if site.registration_open %}{{ t('lock_note_reg') }}{% endif %}</p>
 {% endif %}

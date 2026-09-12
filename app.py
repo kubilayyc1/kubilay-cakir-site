@@ -195,6 +195,23 @@ I18N = {
         "splash_name": "Kubilay Çakır",
         "splash_skip": "Geç",
         "account_kicker": "Hesap",
+        "nav_ilan": "İlan",
+        "ilan_eyebrow": "Özel ilan · espri dozunda",
+        "ilan_index_title": "İlanlar",
+        "ilan_index_sub": "Kadir’in köşesinden hafif, temiz espriler — ciddiyet opsiyonel.",
+        "ilan_view": "İlana bak",
+        "ilan_badge": "Stok sınırlı",
+        "ilan_cta": "WhatsApp ile Kadir’e Yaz",
+        "ilan_back_list": "Tüm İlanlar",
+        "ilan_back_home": "Ana Sayfa",
+        "ilan_home_teaser": "İlan",
+        "ilan_home_hint": "Az yenmiş karpuz · 500₺",
+        "ilan_karpuz_title": "AZ YENMİŞ KARPUZ",
+        "ilan_karpuz_tag": "Topal Kadir’in karpuzlarından",
+        "ilan_karpuz_price": "500₺",
+        "ilan_karpuz_desc": "Az yenmiş, taze — gece sofrasından kalma. Dilim dilim dürüstlük: bir ısırık alınmış, geri kalanı hâlâ soğuk ve kıtır. Küfürsüz, temiz bir karpuz macerası.",
+        "ilan_karpuz_wink": "Kurucu Yardımcısı Kadir’in efsane karpuz stokundan bir göz kırpma — marka şakası, kötü niyet yok. İlgilenirsen WhatsApp’tan yazman yeter.",
+        "ilan_karpuz_wa": "Az yenmiş karpuz ilanı için yazıyorum — 500₺",
     },
     "en": {
         "nav_home": "Home",
@@ -318,6 +335,23 @@ I18N = {
         "splash_name": "Kubilay Çakır",
         "splash_skip": "Skip",
         "account_kicker": "Account",
+        "nav_ilan": "Listing",
+        "ilan_eyebrow": "Special listing · light humor",
+        "ilan_index_title": "Listings",
+        "ilan_index_sub": "Light, clean jokes from Kadir’s corner — seriousness optional.",
+        "ilan_view": "View listing",
+        "ilan_badge": "Limited stock",
+        "ilan_cta": "Message Kadir on WhatsApp",
+        "ilan_back_list": "All Listings",
+        "ilan_back_home": "Home",
+        "ilan_home_teaser": "Listing",
+        "ilan_home_hint": "Lightly tasted watermelon · 500₺",
+        "ilan_karpuz_title": "LIGHTLY TASTED WATERMELON",
+        "ilan_karpuz_tag": "From Topal Kadir’s watermelons",
+        "ilan_karpuz_price": "500₺",
+        "ilan_karpuz_desc": "Lightly tasted, still fresh — leftovers from last night’s table. Honest by the slice: one bite taken, the rest still cold and crisp. Clean humor, no foul language.",
+        "ilan_karpuz_wink": "A playful wink from Co-founder Kadir’s legendary watermelon stash — brand joke, no hard feelings. Interested? Just WhatsApp.",
+        "ilan_karpuz_wa": "Writing about the lightly tasted watermelon listing — 500₺",
     },
 }
 
@@ -851,6 +885,23 @@ def register_page():
 @app.route("/kadir")
 def kadir_page():
     return render_template("kadir.html", user=current_user())
+
+
+@app.route("/ilan")
+def ilan_index():
+    return render_template("ilan_index.html", user=current_user())
+
+
+@app.route("/ilan/karpuz")
+def ilan_karpuz():
+    wa = whatsapp_ctx()
+    msg = t("ilan_karpuz_wa")
+    wa_url = f"{wa['url']}?text={quote(msg)}"
+    return render_template(
+        "ilan_karpuz.html",
+        user=current_user(),
+        wa_url=wa_url,
+    )
 
 
 @app.route("/odeme")

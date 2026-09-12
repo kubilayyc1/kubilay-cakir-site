@@ -36,6 +36,7 @@
       </button>
       <nav class="site-nav" id="site-nav">
         <a class="nav-link" href="{{ url_for('index') }}">{{ t('nav_home') }}</a>
+        <a class="nav-link nav-ilan" href="{{ url_for('ilan_index') }}">{{ t('nav_ilan') }}</a>
         {% if user %}
           <a class="nav-link" href="{{ url_for('payment_page') }}">{{ t('nav_payment') }}</a>
           {% if user.is_admin %}
@@ -72,6 +73,7 @@
       <p class="footer-tag">{{ site.tagline }}</p>
       <div class="footer-links">
         <a href="{{ site.instagram_url }}" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <a href="{{ url_for('ilan_index') }}">{{ t('nav_ilan') }}</a>
         {% if user %}
         <a href="{{ url_for('payment_page') }}">{{ t('footer_payment') }}</a>
         {% else %}

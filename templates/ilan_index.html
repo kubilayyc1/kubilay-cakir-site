@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ t('ilan_index_title') }} — {{ site.site_title }}{% endblock %}
+{% block og_title %}{{ t('ilan_index_title') }}{% endblock %}
+{% block content %}
+<section class="section fade-in ilan-index">
+  <p class="hero-eyebrow">{{ t('ilan_eyebrow') }}</p>
+  <h1 class="section-title">{{ t('ilan_index_title') }}</h1>
+  <p class="section-sub">{{ t('ilan_index_sub') }}</p>
+  <a class="ilan-teaser glass" href="{{ url_for('ilan_karpuz') }}">
+    <div class="ilan-teaser-media">
+      <img src="{{ url_for('static', filename='img/karpuz-ilan.jpg') }}" alt="{{ t('ilan_karpuz_title') }}" loading="lazy" />
+    </div>
+    <div class="ilan-teaser-body">
+      <span class="ilan-teaser-tag">{{ t('ilan_karpuz_tag') }}</span>
+      <h2 class="ilan-teaser-title">{{ t('ilan_karpuz_title') }}</h2>
+      <p class="ilan-teaser-price">{{ t('ilan_karpuz_price') }}</p>
+      <span class="ilan-teaser-cta">{{ t('ilan_view') }} →</span>
+    </div>
+  </a>
+</section>
+{% endblock %}

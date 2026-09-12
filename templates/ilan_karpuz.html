@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ t('ilan_karpuz_title') }} — {{ site.site_title }}{% endblock %}
+{% block og_title %}{{ t('ilan_karpuz_title') }} · {{ t('ilan_karpuz_price') }}{% endblock %}
+{% block head %}
+<meta property="og:image" content="{{ url_for('static', filename='img/karpuz-ilan.jpg', _external=True) }}" />
+{% endblock %}
+{% block content %}
+<section class="section fade-in ilan-detail">
+  <div class="ilan-card glass">
+    <div class="ilan-ornament" aria-hidden="true"></div>
+    <div class="ilan-photo-wrap">
+      <img class="ilan-photo" src="{{ url_for('static', filename='img/karpuz-ilan.jpg') }}" alt="{{ t('ilan_karpuz_title') }}" />
+    </div>
+    <p class="ilan-eyebrow">{{ t('ilan_eyebrow') }}</p>
+    <h1 class="ilan-title">{{ t('ilan_karpuz_title') }}</h1>
+    <p class="ilan-tag">{{ t('ilan_karpuz_tag') }}</p>
+    <div class="ilan-price-row">
+      <span class="ilan-price">{{ t('ilan_karpuz_price') }}</span>
+      <span class="ilan-badge">{{ t('ilan_badge') }}</span>
+    </div>
+    <div class="ilan-divider" aria-hidden="true"></div>
+    <p class="ilan-desc">{{ t('ilan_karpuz_desc') }}</p>
+    <p class="ilan-wink">{{ t('ilan_karpuz_wink') }}</p>
+    <a class="btn btn-wa ilan-wa" href="{{ wa_url }}" target="_blank" rel="noopener noreferrer">
+      {{ t('ilan_cta') }}
+    </a>
+    <p class="ilan-phone">{{ site.whatsapp.display }} · {{ t('footer_credit_name') }}</p>
+    <div class="ilan-nav-links">
+      <a class="btn btn-outline" href="{{ url_for('ilan_index') }}">{{ t('ilan_back_list') }}</a>
+      <a class="btn btn-outline" href="{{ url_for('index') }}">{{ t('ilan_back_home') }}</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
